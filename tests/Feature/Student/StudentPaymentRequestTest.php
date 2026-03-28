@@ -3,6 +3,8 @@
 namespace Tests\Feature\Student;
 
 use App\Enums\PaymentRequestStatus;
+use App\Enums\ChargeCalculationMode;
+use App\Models\ChargeSetting;
 use App\Models\PaymentRequest;
 use App\Models\PaymentType;
 use App\Models\ProgramType;
@@ -99,6 +101,48 @@ class StudentPaymentRequestTest extends TestCase
             'amount' => '5000.00',
             'payment_status' => PaymentRequestStatus::Pending->value,
         ]);
+    }
+
+    public function test_student_payment_request_snapshots_portal_and_paystack_charges()
+    {
+        ChargeSetting::query()->update([
+            'portal_charge_mode' => ChargeCalculationMode::Percentage,
+            'portal_charge_value' => '2.50',
+            'paystack_percentage_rate' => '1.5000',
+            'paystack_flat_fee' => '100.00',
+            'paystack_flat_fee_threshold' => '2500.00',
+            'paystack_charge_cap' => '2000.00',
+        ]);
+
+        $programType = ProgramType::query()->where('name', 'Undergraduate')->firstOrFail();
+        $paymentType = PaymentType::factory()->create([
+            'name' => 'Certificate Registration',
+            'amount' => 10000,
+            'is_active' => true,
+        ]);
+        $paymentType->programTypes()->sync([$programType->id]);
+
+        $response = $this->post(route('student-payments.store'), [
+            'full_name' => 'Amina Buba',
+            'matric_number' => 'GSU/20/3333',
+            'email' => 'amina@example.com',
+            'phone_number' => '08012345670',
+            'department' => 'Computer Science',
+            'faculty' => 'Faculty of Sciences',
+            'program_type_id' => $programType->id,
+            'graduation_session' => '2023/2024',
+            'payment_type_id' => $paymentType->id,
+        ]);
+
+        $paymentRequest = PaymentRequest::query()->firstOrFail();
+
+        $response->assertRedirect(route('student-payments.show', $paymentRequest));
+
+        $this->assertSame('10000.00', $paymentRequest->base_amount);
+        $this->assertSame('250.00', $paymentRequest->portal_charge_amount);
+        $this->assertSame('258.00', $paymentRequest->paystack_charge_amount);
+        $this->assertSame('10508.00', $paymentRequest->amount);
+        $this->assertIsArray($paymentRequest->charge_settings_snapshot);
     }
 
     public function test_inactive_program_type_cannot_be_submitted()

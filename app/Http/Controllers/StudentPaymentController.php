@@ -8,6 +8,8 @@ use App\Models\Faculty;
 use App\Models\PaymentRequest;
 use App\Models\PaymentType;
 use App\Models\ProgramType;
+use App\Services\ChargeSettingService;
+use App\Services\PaymentChargeCalculator;
 use App\Services\PaymentRequestService;
 use App\Support\GraduationSessionOptions;
 use Illuminate\Http\RedirectResponse;
@@ -18,11 +20,15 @@ class StudentPaymentController extends Controller
 {
     public function __construct(
         protected PaymentRequestService $paymentRequestService,
+        protected PaymentChargeCalculator $paymentChargeCalculator,
+        protected ChargeSettingService $chargeSettingService,
     ) {
     }
 
     public function create(): Response
     {
+        $chargeSetting = $this->chargeSettingService->current();
+
         return Inertia::render('student-payments/create', [
             'faculties' => Faculty::query()
                 ->active()
@@ -66,17 +72,27 @@ class StudentPaymentController extends Controller
                 ->active()
                 ->ordered()
                 ->get()
-                ->map(fn (PaymentType $paymentType): array => [
-                    'id' => $paymentType->id,
-                    'name' => $paymentType->name,
-                    'amount' => $paymentType->amount,
-                    'description' => $paymentType->description,
-                    'program_type_ids' => $paymentType->programTypes
-                        ->pluck('id')
-                        ->map(fn (mixed $programTypeId): string => (string) $programTypeId)
-                        ->values()
-                        ->all(),
-                ]),
+                ->map(function (PaymentType $paymentType) use ($chargeSetting): array {
+                    $chargeBreakdown = $this->paymentChargeCalculator->calculateForBaseAmount(
+                        (string) $paymentType->amount,
+                        $chargeSetting,
+                    );
+
+                    return [
+                        'id' => $paymentType->id,
+                        'name' => $paymentType->name,
+                        'amount' => $chargeBreakdown['total_amount'],
+                        'base_amount' => $chargeBreakdown['base_amount'],
+                        'portal_charge_amount' => $chargeBreakdown['portal_charge_amount'],
+                        'paystack_charge_amount' => $chargeBreakdown['paystack_charge_amount'],
+                        'description' => $paymentType->description,
+                        'program_type_ids' => $paymentType->programTypes
+                            ->pluck('id')
+                            ->map(fn (mixed $programTypeId): string => (string) $programTypeId)
+                            ->values()
+                            ->all(),
+                    ];
+                }),
         ]);
     }
 
@@ -111,6 +127,9 @@ class StudentPaymentController extends Controller
                 'payment_type_id' => $paymentRequest->payment_type_id,
                 'payment_type_name' => $paymentRequest->payment_type_name,
                 'payment_type_description' => $paymentRequest->payment_type_description,
+                'base_amount' => $paymentRequest->base_amount,
+                'portal_charge_amount' => $paymentRequest->portal_charge_amount,
+                'paystack_charge_amount' => $paymentRequest->paystack_charge_amount,
                 'amount' => $paymentRequest->amount,
                 'payment_status' => $paymentRequest->payment_status->value,
                 'payment_status_label' => $paymentRequest->payment_status->label(),

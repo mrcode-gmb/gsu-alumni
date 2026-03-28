@@ -53,7 +53,13 @@ export function PaymentRequestSummary({ paymentRequest }: { paymentRequest: Stud
                     <Separator />
                     <SummaryRow label="Payment type" value={paymentRequest.payment_type_name} />
                     <Separator />
-                    <SummaryRow label="Amount" value={currencyFormatter.format(Number(paymentRequest.amount))} />
+                    <SummaryRow label="Base amount" value={currencyFormatter.format(Number(paymentRequest.base_amount))} />
+                    <Separator />
+                    <SummaryRow label="Our own charge" value={currencyFormatter.format(Number(paymentRequest.portal_charge_amount))} />
+                    <Separator />
+                    <SummaryRow label="Paystack gateway charge" value={currencyFormatter.format(Number(paymentRequest.paystack_charge_amount))} />
+                    <Separator />
+                    <SummaryRow label="Total payable" value={currencyFormatter.format(Number(paymentRequest.amount))} />
                     {paymentRequest.payment_reference && (
                         <>
                             <Separator />

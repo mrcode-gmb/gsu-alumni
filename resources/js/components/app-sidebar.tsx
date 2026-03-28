@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Building2, CreditCard, FileText, GraduationCap, LayoutGrid, Network } from 'lucide-react';
+import { BadgePercent, Building2, CreditCard, FileText, GraduationCap, LayoutGrid, Network } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -17,6 +17,15 @@ export function AppSidebar() {
         },
         ...(auth.user.role !== 'student'
             ? [
+                  ...(auth.user.role === 'super_admin'
+                      ? [
+                            {
+                                title: 'Charge Settings',
+                                href: route('admin.charge-settings.edit'),
+                                icon: BadgePercent,
+                            },
+                        ]
+                      : []),
                   {
                       title: 'Payment Types',
                       href: route('admin.payment-types.index'),

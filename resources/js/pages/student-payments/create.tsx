@@ -105,7 +105,30 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
                                             <p className="mt-1 text-2xl font-semibold text-slate-950">
                                                 {currencyFormatter.format(Number(selectedPaymentType.amount))}
                                             </p>
+                                            <p className="mt-1 text-xs font-medium tracking-[0.16em] text-slate-500 uppercase">
+                                                Total payable
+                                            </p>
                                         </div>
+                                        <dl className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <dt>Base amount</dt>
+                                                <dd className="font-medium text-slate-900">
+                                                    {currencyFormatter.format(Number(selectedPaymentType.base_amount))}
+                                                </dd>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-3">
+                                                <dt>Our own charge</dt>
+                                                <dd className="font-medium text-slate-900">
+                                                    {currencyFormatter.format(Number(selectedPaymentType.portal_charge_amount))}
+                                                </dd>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-3">
+                                                <dt>Paystack gateway charge</dt>
+                                                <dd className="font-medium text-slate-900">
+                                                    {currencyFormatter.format(Number(selectedPaymentType.paystack_charge_amount))}
+                                                </dd>
+                                            </div>
+                                        </dl>
                                         <p className="text-sm leading-6 text-slate-600">
                                             {selectedPaymentType.description || 'No extra description has been provided for this payment type yet.'}
                                         </p>
@@ -344,12 +367,25 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
                             </div>
 
                             <div className="rounded-2xl border bg-slate-50 p-4">
-                                <p className="text-sm font-medium text-slate-700">Amount</p>
+                                <p className="text-sm font-medium text-slate-700">Total payable</p>
                                 <p className="mt-1 text-2xl font-semibold text-slate-950">
                                     {selectedPaymentType ? currencyFormatter.format(Number(selectedPaymentType.amount)) : 'Select a payment type'}
                                 </p>
+                                {selectedPaymentType ? (
+                                    <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                                        <p>
+                                            Base amount: <span className="font-medium text-slate-900">{currencyFormatter.format(Number(selectedPaymentType.base_amount))}</span>
+                                        </p>
+                                        <p>
+                                            Our own charge: <span className="font-medium text-slate-900">{currencyFormatter.format(Number(selectedPaymentType.portal_charge_amount))}</span>
+                                        </p>
+                                        <p>
+                                            Paystack gateway charge: <span className="font-medium text-slate-900">{currencyFormatter.format(Number(selectedPaymentType.paystack_charge_amount))}</span>
+                                        </p>
+                                    </div>
+                                ) : null}
                                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                                    The amount is controlled by the selected payment type and cannot be edited manually.
+                                    The total is controlled by the selected payment type and the current approved charge settings, so it cannot be edited manually.
                                 </p>
                             </div>
 

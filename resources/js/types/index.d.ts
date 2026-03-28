@@ -34,6 +34,8 @@ export interface SelectOption {
     label: string;
 }
 
+export type ChargeCalculationMode = 'fixed' | 'percentage';
+
 export interface PaginationLink {
     url: string | null;
     label: string;
@@ -135,6 +137,9 @@ export interface StudentPaymentTypeOption {
     id: number;
     name: string;
     amount: string;
+    base_amount: string;
+    portal_charge_amount: string;
+    paystack_charge_amount: string;
     description: string | null;
     program_type_ids: string[];
 }
@@ -158,6 +163,9 @@ export interface StudentPaymentRequest {
     payment_type_id: number;
     payment_type_name: string;
     payment_type_description: string | null;
+    base_amount: string;
+    portal_charge_amount: string;
+    paystack_charge_amount: string;
     amount: string;
     payment_status: PaymentRequestStatus;
     payment_status_label: string;
@@ -187,6 +195,9 @@ export interface StudentReceipt {
     program_type_name: string | null;
     graduation_session: string;
     payment_type_name: string;
+    base_amount: string;
+    portal_charge_amount: string;
+    paystack_charge_amount: string;
     amount: string;
     payment_status: PaymentRequestStatus;
     payment_status_label: string;
@@ -270,6 +281,9 @@ export interface AdminPaymentRecordDetail {
     graduation_session: string;
     payment_type_name: string;
     payment_type_description: string | null;
+    base_amount: string;
+    portal_charge_amount: string;
+    paystack_charge_amount: string;
     amount: string;
     payment_status: PaymentRequestStatus;
     payment_status_label: string;
@@ -316,6 +330,24 @@ export interface SharedData {
     errors?: Record<string, string>;
     ziggy: Config & { location: string };
     [key: string]: unknown;
+}
+
+export interface ChargeSetting {
+    portal_charge_mode: ChargeCalculationMode;
+    portal_charge_value: string;
+    paystack_percentage_rate: string;
+    paystack_flat_fee: string;
+    paystack_flat_fee_threshold: string;
+    paystack_charge_cap: string;
+    updated_at: string | null;
+    updated_by_name: string | null;
+}
+
+export interface ChargePreviewSample {
+    base_amount: string;
+    portal_charge_amount: string;
+    paystack_charge_amount: string;
+    total_amount: string;
 }
 
 export interface User {

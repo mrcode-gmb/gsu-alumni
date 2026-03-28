@@ -161,11 +161,13 @@
 @media print {
     @page {
         size: A4;
-        margin: 14mm;
+        margin: 10mm;
     }
 
     body {
         background: #ffffff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     .receipt-screen-only {

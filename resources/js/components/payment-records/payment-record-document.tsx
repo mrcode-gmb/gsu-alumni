@@ -57,7 +57,7 @@ export function PaymentRecordDocument({
                     </div>
 
                     <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm shadow-sm">
-                        <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Amount</p>
+                        <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Total amount</p>
                         <p className="mt-1 text-2xl font-semibold text-slate-950">
                             {currencyFormatter.format(Number(paymentRecord.amount))}
                         </p>
@@ -94,6 +94,14 @@ export function PaymentRecordDocument({
                             <DetailRow label="Payment type" value={paymentRecord.payment_type_name} />
                             <Separator />
                             <DetailRow label="Description" value={paymentRecord.payment_type_description || 'No description recorded.'} />
+                            <Separator />
+                            <DetailRow label="Base amount" value={currencyFormatter.format(Number(paymentRecord.base_amount))} />
+                            <Separator />
+                            <DetailRow label="Our own charge" value={currencyFormatter.format(Number(paymentRecord.portal_charge_amount))} />
+                            <Separator />
+                            <DetailRow label="Paystack gateway charge" value={currencyFormatter.format(Number(paymentRecord.paystack_charge_amount))} />
+                            <Separator />
+                            <DetailRow label="Total amount" value={currencyFormatter.format(Number(paymentRecord.amount))} />
                             <Separator />
                             <DetailRow label="Status" value={paymentRecord.payment_status_label} />
                             <Separator />

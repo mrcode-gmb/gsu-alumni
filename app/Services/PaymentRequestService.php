@@ -12,6 +12,11 @@ use Illuminate\Validation\ValidationException;
 
 class PaymentRequestService
 {
+    public function __construct(
+        protected PaymentChargeCalculator $paymentChargeCalculator,
+    ) {
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      * @return array{paymentRequest: PaymentRequest, reused: bool}
@@ -114,6 +119,8 @@ class PaymentRequestService
      */
     protected function buildPayload(array $attributes, ProgramType $programType, PaymentType $paymentType): array
     {
+        $chargeBreakdown = $this->paymentChargeCalculator->calculateForBaseAmount((string) $paymentType->amount);
+
         return [
             ...$attributes,
             'program_type_id' => $programType->getKey(),
@@ -121,7 +128,11 @@ class PaymentRequestService
             'payment_type_id' => $paymentType->getKey(),
             'payment_type_name' => $paymentType->name,
             'payment_type_description' => $paymentType->description,
-            'amount' => $paymentType->amount,
+            'base_amount' => $chargeBreakdown['base_amount'],
+            'portal_charge_amount' => $chargeBreakdown['portal_charge_amount'],
+            'paystack_charge_amount' => $chargeBreakdown['paystack_charge_amount'],
+            'charge_settings_snapshot' => $chargeBreakdown['charge_settings_snapshot'],
+            'amount' => $chargeBreakdown['total_amount'],
             'payment_status' => PaymentRequestStatus::Pending,
             'payment_reference' => null,
             'paystack_reference' => null,

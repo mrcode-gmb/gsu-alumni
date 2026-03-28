@@ -32,6 +32,10 @@ class PaymentRequest extends Model
         'payment_type_id',
         'payment_type_name',
         'payment_type_description',
+        'base_amount',
+        'portal_charge_amount',
+        'paystack_charge_amount',
+        'charge_settings_snapshot',
         'amount',
         'payment_status',
         'payment_reference',
@@ -53,9 +57,13 @@ class PaymentRequest extends Model
     {
         return [
             'program_type_id' => 'integer',
+            'base_amount' => 'decimal:2',
+            'portal_charge_amount' => 'decimal:2',
+            'paystack_charge_amount' => 'decimal:2',
             'amount' => 'decimal:2',
             'payment_status' => PaymentRequestStatus::class,
             'paid_at' => 'datetime',
+            'charge_settings_snapshot' => 'array',
             'initialization_payload' => 'array',
             'verification_payload' => 'array',
         ];

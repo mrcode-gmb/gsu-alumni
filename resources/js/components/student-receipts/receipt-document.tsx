@@ -1,6 +1,5 @@
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { type StudentReceipt } from '@/types';
 
 const currencyFormatter = new Intl.NumberFormat('en-NG', {
@@ -11,9 +10,9 @@ const currencyFormatter = new Intl.NumberFormat('en-NG', {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
     return (
-        <div className="grid gap-1 py-3 sm:grid-cols-[180px,1fr] sm:gap-4">
-            <dt className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">{label}</dt>
-            <dd className="text-sm font-medium text-slate-900">{value}</dd>
+        <div className="grid grid-cols-[132px,1fr] gap-3 py-1.5 text-sm sm:grid-cols-[160px,1fr]">
+            <dt className="font-semibold text-slate-700">{label}:</dt>
+            <dd className="font-medium break-words text-slate-950">{value}</dd>
         </div>
     );
 }
@@ -28,101 +27,127 @@ function formatDateTime(value: string | null): string {
 
 export function ReceiptDocument({ receipt }: { receipt: StudentReceipt }) {
     return (
-        <article className="receipt-document overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-            <div className="border-b border-slate-200 bg-[linear-gradient(135deg,_#ecfdf5_0%,_#ffffff_45%,_#f8fafc_100%)] px-6 py-6 sm:px-8">
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="space-y-3">
-                        <div className="flex items-start gap-4">
-                            <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-emerald-100 bg-white p-2 shadow-sm">
-                                <AppLogoIcon className="size-full" alt="Gombe State University logo" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-semibold tracking-[0.26em] text-emerald-700 uppercase">Gombe State University</p>
-                                <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Official Payment Receipt</h1>
-                                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                                    GSU Alumni Payment Portal receipt for a successfully verified student payment.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-3">
-                            <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">{receipt.payment_status_label}</Badge>
-                            <span className="text-sm text-slate-600">Receipt number: {receipt.receipt_number}</span>
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-emerald-100 bg-white/90 px-4 py-3 text-sm shadow-sm">
-                        <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Issued at</p>
-                        <p className="mt-1 font-semibold text-slate-950">{formatDateTime(receipt.issued_at)}</p>
-                    </div>
+        <article className="receipt-document relative overflow-hidden rounded-[1.5rem] border-2 border-slate-300 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="receipt-watermark flex h-[26rem] w-[26rem] items-center justify-center opacity-[0.055] sm:h-[30rem] sm:w-[30rem]">
+                    <AppLogoIcon className="size-full" alt="GSU watermark" />
                 </div>
             </div>
 
-            <div className="grid gap-8 px-6 py-6 sm:px-8 lg:grid-cols-[1.15fr,0.85fr]">
-                <section>
-                    <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                            <div>
-                                <p className="text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">Student details</p>
-                                <h2 className="mt-2 text-xl font-semibold text-slate-950">{receipt.full_name}</h2>
-                            </div>
-
-                            <div className="text-sm text-slate-600">
-                                <span className="font-medium text-slate-800">Matric number:</span> {receipt.matric_number}
-                            </div>
+            <div className="relative">
+                <div className="border-b-4 border-emerald-700 px-5 py-6 sm:px-8">
+                    <div className="grid gap-5 md:grid-cols-[88px,1fr,190px] md:items-start">
+                        <div className="mx-auto flex size-20 shrink-0 items-center justify-center md:mx-0">
+                            <AppLogoIcon className="size-full" alt="Gombe State University logo" />
                         </div>
 
-                        <div className="mt-5">
-                            <dl>
-                                <DetailRow label="Email address" value={receipt.email} />
-                                <Separator />
-                                <DetailRow label="Phone number" value={receipt.phone_number} />
-                                <Separator />
-                                <DetailRow label="Department" value={receipt.department} />
-                                <Separator />
+                        <div className="text-center md:text-left">
+                            <p className="text-xl font-bold tracking-tight text-slate-950 sm:text-3xl">GOMBE STATE UNIVERSITY</p>
+                            <p className="mt-2 text-sm font-semibold tracking-wide text-slate-800 uppercase">
+                                Tudun Wada Gombe, Gombe State
+                            </p>
+                            <p className="mt-2 text-sm font-semibold text-slate-800">
+                                {receipt.graduation_session} Academic Session
+                            </p>
+                            <h1 className="mt-3 text-2xl font-bold text-slate-950 underline underline-offset-4 sm:text-3xl">
+                                Student&apos;s Receipt
+                            </h1>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-300 bg-slate-50/90 p-4 text-sm">
+                            <p className="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">Receipt number</p>
+                            <p className="mt-1 text-base font-bold text-slate-950">{receipt.receipt_number}</p>
+                            <p className="mt-4 text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">Payment status</p>
+                            <Badge className="mt-2 bg-emerald-600 text-white hover:bg-emerald-600">{receipt.payment_status_label}</Badge>
+                            <p className="mt-4 text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">Issued at</p>
+                            <p className="mt-1 font-semibold text-slate-950">{formatDateTime(receipt.issued_at)}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="px-5 py-5 sm:px-8">
+                    <div className="flex flex-col gap-2 border-b border-slate-300 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-lg font-bold text-slate-950">
+                            Payment Reference:{' '}
+                            <span className="text-emerald-700">{receipt.payment_reference ?? receipt.payment_request_public_reference}</span>
+                        </p>
+                        <p className="text-sm font-medium text-slate-700">
+                            Verified payment for {receipt.payment_type_name}
+                        </p>
+                    </div>
+
+                    <div className="mt-5 grid gap-6 lg:grid-cols-2">
+                        <section className="rounded-2xl border border-slate-300 bg-white/90 p-4">
+                            <h2 className="text-sm font-bold tracking-[0.18em] text-slate-700 uppercase">Student details</h2>
+                            <div className="mt-3">
+                                <DetailRow label="Name" value={receipt.full_name} />
+                                <DetailRow label="Matric Number" value={receipt.matric_number} />
+                                <DetailRow label="Email" value={receipt.email} />
+                                <DetailRow label="Phone No." value={receipt.phone_number} />
                                 <DetailRow label="Faculty" value={receipt.faculty} />
-                                <Separator />
-                                <DetailRow label="Program type" value={receipt.program_type_name ?? 'Not recorded'} />
-                                <Separator />
-                                <DetailRow label="Graduation session" value={receipt.graduation_session} />
-                            </dl>
-                        </div>
-                    </div>
-                </section>
+                                <DetailRow label="Department" value={receipt.department} />
+                                <DetailRow label="Programme" value={receipt.program_type_name ?? 'Not recorded'} />
+                            </div>
+                        </section>
 
-                <section className="space-y-5">
-                    <div className="rounded-3xl border border-slate-200 bg-white p-5">
-                        <p className="text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">Payment details</p>
-                        <p className="mt-2 text-lg font-semibold text-slate-950">{receipt.payment_type_name}</p>
-                        <p className="mt-1 text-3xl font-semibold tracking-tight text-slate-950">
-                            {currencyFormatter.format(Number(receipt.amount))}
+                        <section className="rounded-2xl border border-slate-300 bg-white/90 p-4">
+                            <h2 className="text-sm font-bold tracking-[0.18em] text-slate-700 uppercase">Payment details</h2>
+                            <div className="mt-3">
+                                <DetailRow label="Academic Session" value={receipt.graduation_session} />
+                                <DetailRow label="Payment Date" value={formatDateTime(receipt.payment_date)} />
+                                <DetailRow label="Payment Type" value={receipt.payment_type_name} />
+                                <DetailRow label="Paystack Ref." value={receipt.paystack_reference ?? 'Not available'} />
+                                <DetailRow label="Transaction Ref." value={receipt.transaction_reference ?? 'Not available'} />
+                                <DetailRow label="Channel" value={receipt.payment_channel ?? 'Not available'} />
+                            </div>
+                        </section>
+                    </div>
+
+                    <div className="mt-6 overflow-hidden rounded-2xl border-2 border-slate-900 bg-white">
+                        <table className="w-full border-collapse text-sm sm:text-base">
+                            <tbody>
+                                <tr className="border-b border-slate-900">
+                                    <th className="w-[68%] bg-slate-100 px-4 py-3 text-left font-bold text-slate-900">Description</th>
+                                    <th className="bg-slate-100 px-4 py-3 text-right font-bold text-slate-900">Amount (NGN)</th>
+                                </tr>
+                                <tr className="border-b border-slate-300">
+                                    <td className="px-4 py-3 font-medium text-slate-800">Base amount</td>
+                                    <td className="px-4 py-3 text-right font-semibold text-slate-950">
+                                        {currencyFormatter.format(Number(receipt.base_amount))}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-slate-300">
+                                    <td className="px-4 py-3 font-medium text-slate-800">Our own charge</td>
+                                    <td className="px-4 py-3 text-right font-semibold text-slate-950">
+                                        {currencyFormatter.format(Number(receipt.portal_charge_amount))}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-slate-300">
+                                    <td className="px-4 py-3 font-medium text-slate-800">Paystack gateway charge</td>
+                                    <td className="px-4 py-3 text-right font-semibold text-slate-950">
+                                        {currencyFormatter.format(Number(receipt.paystack_charge_amount))}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="bg-slate-900 px-4 py-3 text-base font-bold text-white">Total Amount Paid</td>
+                                    <td className="bg-slate-900 px-4 py-3 text-right text-base font-bold text-white">
+                                        {currencyFormatter.format(Number(receipt.amount))}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/85 px-4 py-4">
+                        <p className="text-sm font-semibold text-emerald-950">Official note</p>
+                        <p className="mt-2 text-sm leading-6 text-emerald-950">
+                            {receipt.official_note} This receipt was generated from a verified payment record and is valid without signature or stamp.
                         </p>
-
-                        <div className="mt-5">
-                            <dl>
-                                <DetailRow label="Payment date" value={formatDateTime(receipt.payment_date)} />
-                                <Separator />
-                                <DetailRow label="Payment status" value={receipt.payment_status_label} />
-                                <Separator />
-                                <DetailRow label="Internal reference" value={receipt.payment_reference ?? 'Not available'} />
-                                <Separator />
-                                <DetailRow label="Paystack reference" value={receipt.paystack_reference ?? 'Not available'} />
-                                <Separator />
-                                <DetailRow label="Payment channel" value={receipt.payment_channel ?? 'Not available'} />
-                                <Separator />
-                                <DetailRow label="Transaction reference" value={receipt.transaction_reference ?? 'Not available'} />
-                            </dl>
-                        </div>
-                    </div>
-
-                    <div className="rounded-3xl border border-emerald-100 bg-emerald-50/80 p-5">
-                        <p className="text-xs font-semibold tracking-[0.18em] text-emerald-800 uppercase">Official note</p>
-                        <p className="mt-2 text-sm leading-6 text-emerald-950">{receipt.official_note}</p>
-                        <p className="mt-3 text-sm leading-6 text-emerald-900/80">
-                            Keep this receipt number and the payment references for any future verification or reprint request.
+                        <p className="mt-2 text-sm leading-6 text-emerald-900/85">
+                            Keep this receipt number and payment reference for reprint or future verification.
                         </p>
                     </div>
-                </section>
+                </div>
             </div>
         </article>
     );
