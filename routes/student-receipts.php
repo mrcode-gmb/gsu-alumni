@@ -1,0 +1,14 @@
+<?php
+
+use App\Http\Controllers\StudentReceiptController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('receipts/lookup', [StudentReceiptController::class, 'lookupForm'])
+    ->name('student-receipts.lookup');
+Route::post('receipts/lookup', [StudentReceiptController::class, 'lookup'])
+    ->name('student-receipts.search');
+Route::post('payment-requests/{paymentRequest}/receipt', [StudentReceiptController::class, 'createFromPaymentRequest'])
+    ->name('student-receipts.from-payment-request');
+Route::get('receipts/{receipt}', [StudentReceiptController::class, 'show'])
+    ->middleware('signed')
+    ->name('student-receipts.show');
