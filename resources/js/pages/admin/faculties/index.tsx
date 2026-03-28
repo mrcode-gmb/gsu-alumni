@@ -77,7 +77,7 @@ export default function FacultyIndex({ faculties, filters, summary }: FacultyInd
                         title="Faculty management"
                         description="Create and manage the approved faculty list used across student biodata and admin records."
                     />
-                    <Button asChild>
+                    <Button className="w-full sm:w-auto" asChild>
                         <Link href={route('admin.faculties.create')}>
                             <CirclePlus />
                             Add faculty
@@ -131,8 +131,8 @@ export default function FacultyIndex({ faculties, filters, summary }: FacultyInd
                                 <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                                 <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by faculty name" className="pl-9" />
                             </div>
-                            <Button type="submit">Search</Button>
-                            <Button type="button" variant="outline" onClick={clearSearch}>
+                            <Button className="w-full sm:w-auto" type="submit">Search</Button>
+                            <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={clearSearch}>
                                 Clear
                             </Button>
                         </form>
@@ -151,7 +151,56 @@ export default function FacultyIndex({ faculties, filters, summary }: FacultyInd
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                <table className="w-full min-w-[920px] text-sm">
+                                <div className="space-y-4 md:hidden">
+                                    {faculties.map((faculty) => (
+                                        <div key={faculty.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="flex items-center gap-2 font-medium text-slate-900">
+                                                    <Building2 className="size-4 text-slate-500" />
+                                                    {faculty.name}
+                                                </div>
+                                                <Badge variant={faculty.is_active ? 'default' : 'secondary'}>
+                                                    {faculty.is_active ? 'Active' : 'Inactive'}
+                                                </Badge>
+                                            </div>
+
+                                            <div className="mt-4 space-y-2 text-sm text-slate-600">
+                                                <p><span className="font-medium text-slate-800">Departments:</span> {faculty.departments_count}</p>
+                                                <p><span className="font-medium text-slate-800">Order:</span> {faculty.display_order ?? 'Auto'}</p>
+                                            </div>
+
+                                            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                                <Button size="sm" variant="outline" asChild>
+                                                    <Link href={route('admin.faculties.edit', faculty.id)}>
+                                                        <PencilLine />
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => toggleStatus(faculty)}>
+                                                    {faculty.is_active ? <PowerOff /> : <Power />}
+                                                    {faculty.is_active ? 'Deactivate' : 'Activate'}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    className="sm:col-span-2"
+                                                    disabled={!faculty.can_delete}
+                                                    onClick={() => setFacultyToDelete(faculty)}
+                                                >
+                                                    <Trash2 />
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                            {!faculty.can_delete && (
+                                                <p className="text-muted-foreground mt-2 text-xs">
+                                                    Faculties with departments or payment records cannot be deleted.
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <table className="hidden w-full min-w-[920px] text-sm md:table">
                                     <thead>
                                         <tr className="border-b text-left">
                                             <th className="px-3 py-3 font-medium">Faculty name</th>

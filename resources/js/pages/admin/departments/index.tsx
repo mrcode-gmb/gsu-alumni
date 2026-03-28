@@ -86,7 +86,7 @@ export default function DepartmentIndex({ departments, filters, summary, faculty
                         title="Department management"
                         description="Create and manage departments under each faculty for cleaner student biodata collection and admin filtering."
                     />
-                    <Button asChild>
+                    <Button className="w-full sm:w-auto" asChild>
                         <Link href={route('admin.departments.create')}>
                             <CirclePlus />
                             Add department
@@ -167,11 +167,11 @@ export default function DepartmentIndex({ departments, filters, summary, faculty
                             </div>
 
                             <div className="flex items-end">
-                                <Button type="submit">Apply</Button>
+                                <Button className="w-full" type="submit">Apply</Button>
                             </div>
 
                             <div className="flex items-end">
-                                <Button type="button" variant="outline" onClick={clearFilters}>
+                                <Button className="w-full" type="button" variant="outline" onClick={clearFilters}>
                                     Clear
                                 </Button>
                             </div>
@@ -191,7 +191,53 @@ export default function DepartmentIndex({ departments, filters, summary, faculty
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                <table className="w-full min-w-[980px] text-sm">
+                                <div className="space-y-4 md:hidden">
+                                    {departments.map((department) => (
+                                        <div key={department.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="font-medium text-slate-900">{department.name}</div>
+                                                <Badge variant={department.is_active ? 'default' : 'secondary'}>
+                                                    {department.is_active ? 'Active' : 'Inactive'}
+                                                </Badge>
+                                            </div>
+
+                                            <div className="mt-4 space-y-2 text-sm text-slate-600">
+                                                <p><span className="font-medium text-slate-800">Faculty:</span> {department.faculty_name ?? 'No faculty assigned'}</p>
+                                                <p><span className="font-medium text-slate-800">Order:</span> {department.display_order ?? 'Auto'}</p>
+                                            </div>
+
+                                            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                                <Button size="sm" variant="outline" asChild>
+                                                    <Link href={route('admin.departments.edit', department.id)}>
+                                                        <PencilLine />
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => toggleStatus(department)}>
+                                                    {department.is_active ? <PowerOff /> : <Power />}
+                                                    {department.is_active ? 'Deactivate' : 'Activate'}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    className="sm:col-span-2"
+                                                    disabled={!department.can_delete}
+                                                    onClick={() => setDepartmentToDelete(department)}
+                                                >
+                                                    <Trash2 />
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                            {!department.can_delete && (
+                                                <p className="text-muted-foreground mt-2 text-xs">
+                                                    Used departments cannot be deleted.
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <table className="hidden w-full min-w-[980px] text-sm md:table">
                                     <thead>
                                         <tr className="border-b text-left">
                                             <th className="px-3 py-3 font-medium">Department name</th>

@@ -62,14 +62,14 @@ export default function Dashboard({ adminSummary, recentPaymentRecords }: Dashbo
                                     <p className="text-muted-foreground text-sm">
                                         Total collected so far: {adminSummary ? currencyFormatter.format(Number(adminSummary.total_amount_collected)) : currencyFormatter.format(0)}
                                     </p>
-                                    <div className="flex flex-wrap gap-3">
-                                        <Button asChild>
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                                        <Button className="w-full sm:w-auto" asChild>
                                             <Link href={route('admin.payment-records.index')}>
                                                 View payment records
                                                 <ArrowRight />
                                             </Link>
                                         </Button>
-                                        <Button variant="outline" asChild>
+                                        <Button className="w-full sm:w-auto" variant="outline" asChild>
                                             <Link href={route('admin.payment-types.index')}>
                                                 Manage payment types
                                                 <CreditCard />
@@ -101,7 +101,7 @@ export default function Dashboard({ adminSummary, recentPaymentRecords }: Dashbo
                                     <CardTitle>Recent payment activity</CardTitle>
                                     <CardDescription>Latest payment requests and verification outcomes across the portal.</CardDescription>
                                 </div>
-                                <Button variant="outline" asChild>
+                                <Button className="w-full sm:w-auto" variant="outline" asChild>
                                     <Link href={route('admin.payment-records.print')} target="_blank">
                                         <Printer />
                                         Print records
@@ -115,7 +115,44 @@ export default function Dashboard({ adminSummary, recentPaymentRecords }: Dashbo
                                     </div>
                                 ) : (
                                     <div className="overflow-x-auto">
-                                        <table className="w-full min-w-[760px] text-sm">
+                                        <div className="space-y-4 md:hidden">
+                                            {recentPaymentRecords.map((record) => (
+                                                <div key={record.public_reference} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                                    <div className="flex flex-col gap-3">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div>
+                                                                <p className="font-medium text-slate-900">{record.full_name}</p>
+                                                                <p className="text-muted-foreground mt-1 text-xs">{record.matric_number}</p>
+                                                            </div>
+                                                            <PaymentStatusBadge status={record.payment_status} label={record.payment_status_label} />
+                                                        </div>
+
+                                                        <div className="grid gap-2 text-sm text-slate-600">
+                                                            <p><span className="font-medium text-slate-800">Payment type:</span> {record.payment_type_name}</p>
+                                                            <p><span className="font-medium text-slate-800">Amount:</span> {currencyFormatter.format(Number(record.amount))}</p>
+                                                            <p><span className="font-medium text-slate-800">Date:</span> {record.recorded_at ? new Date(record.recorded_at).toLocaleString() : 'Not recorded'}</p>
+                                                        </div>
+
+                                                        <div className="grid gap-2 sm:grid-cols-2">
+                                                            <Button size="sm" variant="outline" asChild>
+                                                                <Link href={route('admin.payment-records.show', record.public_reference)}>
+                                                                    View
+                                                                </Link>
+                                                            </Button>
+                                                            {record.receipt_action_available && (
+                                                                <Button size="sm" variant="outline" asChild>
+                                                                    <Link href={route('admin.payment-records.receipt', record.public_reference)} method="post" as="button">
+                                                                        Receipt
+                                                                    </Link>
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <table className="hidden w-full min-w-[760px] text-sm md:table">
                                             <thead>
                                                 <tr className="border-b text-left">
                                                     <th className="px-3 py-3 font-medium">Student</th>

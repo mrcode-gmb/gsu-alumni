@@ -115,15 +115,15 @@ export default function PaymentRecordIndex({
                         description="Search, filter, inspect, print, and monitor the verified student payment records stored in the portal."
                     />
 
-                    <div className="flex flex-wrap gap-3">
-                        <Button variant="outline" asChild>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                        <Button className="w-full sm:w-auto" variant="outline" asChild>
                             <a href={printUrl} target="_blank" rel="noreferrer">
                                 <Printer />
                                 Print filtered view
                             </a>
                         </Button>
 
-                        <Button asChild>
+                        <Button className="w-full sm:w-auto" asChild>
                             <Link href={route('admin.payment-types.index')}>
                                 <ReceiptText />
                                 Payment types
@@ -298,12 +298,12 @@ export default function PaymentRecordIndex({
                                 </div>
                             </div>
 
-                            <div className="flex flex-wrap gap-3">
-                                <Button type="submit">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                                <Button className="w-full sm:w-auto" type="submit">
                                     <Search />
                                     Apply filters
                                 </Button>
-                                <Button type="button" variant="outline" onClick={clearFilters}>
+                                <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={clearFilters}>
                                     <RotateCcw />
                                     Clear filters
                                 </Button>
@@ -349,7 +349,61 @@ export default function PaymentRecordIndex({
                             </div>
                         ) : (
                             <>
-                                <div className="overflow-x-auto">
+                                <div className="space-y-4 md:hidden">
+                                    {paymentRecords.data.map((record) => (
+                                        <div key={record.public_reference} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <p className="font-medium text-slate-900">{record.full_name}</p>
+                                                    <p className="text-muted-foreground mt-1 text-xs">{record.matric_number}</p>
+                                                    <p className="text-muted-foreground mt-1 text-xs">{record.email}</p>
+                                                </div>
+                                                <PaymentStatusBadge status={record.payment_status} label={record.payment_status_label} />
+                                            </div>
+
+                                            <div className="mt-4 space-y-2 text-sm text-slate-600">
+                                                <p><span className="font-medium text-slate-800">Department:</span> {record.department}</p>
+                                                <p><span className="font-medium text-slate-800">Faculty:</span> {record.faculty}</p>
+                                                <p><span className="font-medium text-slate-800">Payment type:</span> {record.payment_type_name}</p>
+                                                <p><span className="font-medium text-slate-800">Amount:</span> {currencyFormatter.format(Number(record.amount))}</p>
+                                                <p><span className="font-medium text-slate-800">Payment date:</span> {record.recorded_at ? new Date(record.recorded_at).toLocaleString() : 'Not recorded'}</p>
+                                                <p className="break-all"><span className="font-medium text-slate-800">Payment reference:</span> {record.payment_reference ?? 'Not generated'}</p>
+                                                <p className="break-all"><span className="font-medium text-slate-800">Receipt number:</span> {record.receipt_number ?? 'No receipt'}</p>
+                                            </div>
+
+                                            <div className="mt-4 grid gap-2">
+                                                <Button size="sm" variant="outline" asChild>
+                                                    <Link href={route('admin.payment-records.show', record.public_reference)}>
+                                                        <Eye />
+                                                        View
+                                                    </Link>
+                                                </Button>
+
+                                                {record.can_open_receipt && (
+                                                    <Button size="sm" variant="outline" asChild>
+                                                        <Link href={route('admin.payment-records.receipt', record.public_reference)} method="post" as="button">
+                                                            <ReceiptText />
+                                                            {record.has_receipt ? 'Receipt' : 'Issue receipt'}
+                                                        </Link>
+                                                    </Button>
+                                                )}
+
+                                                <Button size="sm" variant="outline" asChild>
+                                                    <a
+                                                        href={route('admin.payment-records.print-single', record.public_reference)}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        <FileSpreadsheet />
+                                                        Print
+                                                    </a>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="hidden overflow-x-auto md:block">
                                     <table className="w-full min-w-[1240px] text-sm">
                                         <thead>
                                             <tr className="border-b text-left">

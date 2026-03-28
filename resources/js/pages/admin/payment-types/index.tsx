@@ -105,7 +105,7 @@ export default function PaymentTypeIndex({ paymentTypes, filters, summary }: Pay
                         title="Payment type management"
                         description="Create and manage the official payment categories students will pay against later."
                     />
-                    <Button asChild>
+                    <Button className="w-full sm:w-auto" asChild>
                         <Link href={route('admin.payment-types.create')}>
                             <CirclePlus />
                             Add payment type
@@ -164,8 +164,8 @@ export default function PaymentTypeIndex({ paymentTypes, filters, summary }: Pay
                                     className="pl-9"
                                 />
                             </div>
-                            <Button type="submit">Search</Button>
-                            <Button type="button" variant="outline" onClick={clearSearch}>
+                            <Button className="w-full sm:w-auto" type="submit">Search</Button>
+                            <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={clearSearch}>
                                 Clear
                             </Button>
                         </form>
@@ -186,7 +186,59 @@ export default function PaymentTypeIndex({ paymentTypes, filters, summary }: Pay
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                <table className="w-full min-w-[900px] text-sm">
+                                <div className="space-y-4 md:hidden">
+                                    {paymentTypes.map((paymentType) => (
+                                        <div key={paymentType.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <p className="font-medium text-slate-900">{paymentType.name}</p>
+                                                    <p className="text-muted-foreground mt-1 text-sm">
+                                                        {currencyFormatter.format(Number(paymentType.amount))}
+                                                    </p>
+                                                </div>
+                                                <Badge variant={paymentType.is_active ? 'default' : 'secondary'}>
+                                                    {paymentType.is_active ? 'Active' : 'Inactive'}
+                                                </Badge>
+                                            </div>
+
+                                            <div className="mt-4 space-y-2 text-sm text-slate-600">
+                                                <p><span className="font-medium text-slate-800">Program types:</span> {paymentType.program_types.length > 0 ? paymentType.program_types.join(', ') : 'Not assigned'}</p>
+                                                <p><span className="font-medium text-slate-800">Order:</span> {paymentType.display_order ?? 'Auto'}</p>
+                                                <p><span className="font-medium text-slate-800">Description:</span> {paymentType.description || 'No description provided.'}</p>
+                                            </div>
+
+                                            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                                <Button size="sm" variant="outline" asChild>
+                                                    <Link href={route('admin.payment-types.edit', paymentType.id)}>
+                                                        <PencilLine />
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => toggleStatus(paymentType)}>
+                                                    {paymentType.is_active ? <PowerOff /> : <Power />}
+                                                    {paymentType.is_active ? 'Deactivate' : 'Activate'}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    className="sm:col-span-2"
+                                                    disabled={!paymentType.can_delete}
+                                                    onClick={() => setPaymentTypeToDelete(paymentType)}
+                                                >
+                                                    <Trash2 />
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                            {!paymentType.can_delete && (
+                                                <p className="text-muted-foreground mt-2 text-xs">
+                                                    Used payment types cannot be deleted.
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <table className="hidden w-full min-w-[900px] text-sm md:table">
                                     <thead>
                                         <tr className="border-b text-left">
                                             <th className="px-3 py-3 font-medium">Payment name</th>

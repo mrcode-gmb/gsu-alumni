@@ -26,7 +26,7 @@ export function PaymentRecordSummaryCards({ summary }: { summary: AdminPaymentDa
                 <Card key={item.key}>
                     <CardHeader className="gap-1">
                         <CardDescription>{item.label}</CardDescription>
-                        <CardTitle className="text-3xl">
+                        <CardTitle className="break-words text-2xl leading-tight sm:text-3xl">
                             {item.isCurrency
                                 ? currencyFormatter.format(Number(summary[item.key]))
                                 : summary[item.key]}
