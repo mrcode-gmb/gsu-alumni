@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StudentPayments\AccessPaymentRequest;
 use App\Http\Requests\StudentPayments\StoreStudentPaymentRequest;
 use App\Models\Department;
 use App\Models\Faculty;
@@ -96,6 +97,8 @@ class StudentPaymentController extends Controller
         $paymentRequest = $result['paymentRequest'];
         $reused = $result['reused'];
 
+        $request->session()->put($this->accessSessionKey($paymentRequest), true);
+
         return to_route('student-payments.show', $paymentRequest)
             ->with([
                 'success' => $reused
@@ -107,6 +110,12 @@ class StudentPaymentController extends Controller
 
     public function show(Request $request, PaymentRequest $paymentRequest): Response
     {
+        if (! $this->hasAccess($request, $paymentRequest)) {
+            return Inertia::render('student-payments/access', [
+                'publicReference' => $paymentRequest->public_reference,
+            ]);
+        }
+
         $previousSuccessfulPaymentsCount = PaymentRequest::query()
             ->where('matric_number', $paymentRequest->matric_number)
             ->where('payment_type_id', $paymentRequest->payment_type_id)
@@ -148,5 +157,36 @@ class StudentPaymentController extends Controller
                 && filled(config('services.paystack.public_key')),
             'autoOpenCheckout' => (bool) $request->session()->get('auto_open_checkout', false),
         ]);
+    }
+
+    public function access(AccessPaymentRequest $request, PaymentRequest $paymentRequest): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $submittedMatric = strtoupper(trim($validated['matric_number']));
+        $submittedEmail = strtolower(trim($validated['email']));
+
+        $storedMatric = strtoupper(trim($paymentRequest->matric_number));
+        $storedEmail = strtolower(trim($paymentRequest->email));
+
+        if ($submittedMatric !== $storedMatric || $submittedEmail !== $storedEmail) {
+            return back()->withErrors([
+                'matric_number' => 'The details do not match this payment request.',
+            ]);
+        }
+
+        $request->session()->put($this->accessSessionKey($paymentRequest), true);
+
+        return to_route('student-payments.show', $paymentRequest);
+    }
+
+    protected function hasAccess(Request $request, PaymentRequest $paymentRequest): bool
+    {
+        return (bool) $request->session()->get($this->accessSessionKey($paymentRequest), false);
+    }
+
+    protected function accessSessionKey(PaymentRequest $paymentRequest): string
+    {
+        return 'payment_request_access_'.$paymentRequest->getKey();
     }
 }

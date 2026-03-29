@@ -64,6 +64,11 @@ class User extends Authenticatable
         return $this->isAlumniAdmin() || $this->isSuperAdmin();
     }
 
+    public function isCashier(): bool
+    {
+        return $this->role === UserRole::Cashier;
+    }
+
     public function isStudent(): bool
     {
         return $this->role === UserRole::Student;

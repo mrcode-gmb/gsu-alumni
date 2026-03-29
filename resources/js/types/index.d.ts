@@ -1,7 +1,7 @@
 import { LucideIcon } from 'lucide-react';
 import type { Config } from 'ziggy-js';
 
-export type UserRole = 'student' | 'alumni_admin' | 'super_admin';
+export type UserRole = 'student' | 'alumni_admin' | 'super_admin' | 'cashier';
 
 export interface Auth {
     user: User;

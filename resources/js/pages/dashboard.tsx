@@ -28,18 +28,21 @@ interface DashboardProps {
 
 export default function Dashboard({ adminSummary, recentPaymentRecords }: DashboardProps) {
     const { auth } = usePage<SharedData>().props;
-    const isAdmin = auth.user.role !== 'student';
+    const isAdmin = auth.user.role === 'alumni_admin' || auth.user.role === 'super_admin';
+    const isCashier = auth.user.role === 'cashier';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <Heading
-                    title={isAdmin ? 'Admin dashboard' : 'Member dashboard'}
+                    title={isAdmin ? 'Admin dashboard' : isCashier ? 'Cashier dashboard' : 'Member dashboard'}
                     description={
                         isAdmin
                             ? 'Monitor payment activity, inspect verified records, and manage the core alumni payment workflow from here.'
-                            : 'Public payment and receipt flows are already live. This member dashboard area can grow later with personal history and account tools.'
+                            : isCashier
+                              ? 'Verify member receipts and confirm successful payments before certificates are issued.'
+                              : 'Public payment and receipt flows are already live. This member dashboard area can grow later with personal history and account tools.'
                     }
                 />
 
@@ -203,6 +206,21 @@ export default function Dashboard({ adminSummary, recentPaymentRecords }: Dashbo
                             </CardContent>
                         </Card>
                     </div>
+                ) : isCashier ? (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Receipt verification desk</CardTitle>
+                            <CardDescription>Confirm member payments before certificate collection.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Button asChild>
+                                <Link href={route('cashier.receipts.verify')}>
+                                    Verify receipts
+                                    <ArrowRight />
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
                 ) : (
                     <Card>
                         <CardHeader>
