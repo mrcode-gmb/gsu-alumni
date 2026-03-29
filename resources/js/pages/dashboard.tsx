@@ -35,11 +35,11 @@ export default function Dashboard({ adminSummary, recentPaymentRecords }: Dashbo
             <Head title="Dashboard" />
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <Heading
-                    title={isAdmin ? 'Admin dashboard' : 'Student dashboard'}
+                    title={isAdmin ? 'Admin dashboard' : 'Member dashboard'}
                     description={
                         isAdmin
                             ? 'Monitor payment activity, inspect verified records, and manage the core alumni payment workflow from here.'
-                            : 'Public payment and receipt flows are already live. This student dashboard area can grow later with personal history and account tools.'
+                            : 'Public payment and receipt flows are already live. This member dashboard area can grow later with personal history and account tools.'
                     }
                 />
 
@@ -155,7 +155,7 @@ export default function Dashboard({ adminSummary, recentPaymentRecords }: Dashbo
                                         <table className="hidden w-full min-w-[760px] text-sm md:table">
                                             <thead>
                                                 <tr className="border-b text-left">
-                                                    <th className="px-3 py-3 font-medium">Student</th>
+                                                    <th className="px-3 py-3 font-medium">Member</th>
                                                     <th className="px-3 py-3 font-medium">Payment type</th>
                                                     <th className="px-3 py-3 font-medium">Amount</th>
                                                     <th className="px-3 py-3 font-medium">Status</th>
@@ -206,9 +206,9 @@ export default function Dashboard({ adminSummary, recentPaymentRecords }: Dashbo
                 ) : (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Student self-service tools will expand here</CardTitle>
+                            <CardTitle>Member self-service tools will expand here</CardTitle>
                             <CardDescription>
-                                Students can already create payment requests, pay through the public portal, and reopen receipts. This signed-in dashboard can later show personal history and account support tools.
+                                Members can already create payment requests, pay through the public portal, and reopen receipts. This signed-in dashboard can later show personal history and account support tools.
                             </CardDescription>
                         </CardHeader>
                     </Card>

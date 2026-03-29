@@ -418,7 +418,7 @@ export default function PaymentRecordIndex({
                                     <table className="w-full min-w-[1240px] text-sm">
                                         <thead>
                                             <tr className="border-b text-left">
-                                                <th className="px-3 py-3 font-medium">Student</th>
+                                                <th className="px-3 py-3 font-medium">Member</th>
                                                 <th className="px-3 py-3 font-medium">Department</th>
                                                 <th className="px-3 py-3 font-medium">Faculty</th>
                                                 <th className="px-3 py-3 font-medium">Payment type</th>

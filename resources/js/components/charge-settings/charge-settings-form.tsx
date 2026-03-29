@@ -205,7 +205,7 @@ export function ChargeSettingsForm({
                         <CardDescription>These settings affect new or refreshed pending requests only.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
-                        <p>Students will see the base amount, your website service charge, the Paystack gateway charge, and the final total before checkout.</p>
+                        <p>Members will see the base amount, your website service charge, the Paystack gateway charge, and the final total before checkout.</p>
                         <p>The charge breakdown is saved onto each payment request so later verification, receipts, and admin records stay consistent even if you update settings again.</p>
                         <p>Already-successful payments and issued receipts are not changed by future updates here.</p>
                         <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">

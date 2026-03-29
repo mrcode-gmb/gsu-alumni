@@ -50,7 +50,7 @@ export function ReceiptDocument({ receipt }: { receipt: StudentReceipt }) {
                                 {receipt.graduation_session} Academic Session
                             </p>
                             <h1 className="mt-3 text-2xl font-bold text-slate-950 underline underline-offset-4 sm:text-3xl">
-                                Student&apos;s Receipt
+                                Member&apos;s Receipt
                             </h1>
                         </div>
 
@@ -78,7 +78,7 @@ export function ReceiptDocument({ receipt }: { receipt: StudentReceipt }) {
 
                     <div className="mt-5 grid gap-6 lg:grid-cols-2">
                         <section className="rounded-2xl border border-slate-300 bg-white/90 p-4">
-                            <h2 className="text-sm font-bold tracking-[0.18em] text-slate-700 uppercase">Student details</h2>
+                            <h2 className="text-sm font-bold tracking-[0.18em] text-slate-700 uppercase">Member details</h2>
                             <div className="mt-3">
                                 <DetailRow label="Name" value={receipt.full_name} />
                                 <DetailRow label="Matric Number" value={receipt.matric_number} />
@@ -111,9 +111,9 @@ export function ReceiptDocument({ receipt }: { receipt: StudentReceipt }) {
                                     <th className="bg-slate-100 px-4 py-3 text-right font-bold text-slate-900">Amount (NGN)</th>
                                 </tr>
                                 <tr>
-                                    <td className="bg-slate-900 px-4 py-3 text-base font-bold text-white">Total Amount Paid</td>
+                                    <td className="bg-slate-900 px-4 py-3 text-base font-bold text-white">Payment Amount</td>
                                     <td className="bg-slate-900 px-4 py-3 text-right text-base font-bold text-white">
-                                        {currencyFormatter.format(Number(receipt.amount))}
+                                        {currencyFormatter.format(Number(receipt.base_amount))}
                                     </td>
                                 </tr>
                             </tbody>

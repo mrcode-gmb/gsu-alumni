@@ -315,7 +315,7 @@
             <thead>
                 <tr>
                     <th style="width: 4%;">#</th>
-                    <th style="width: 19%;">Student</th>
+                    <th style="width: 19%;">Member</th>
                     <th style="width: 11%;">Department</th>
                     <th style="width: 11%;">Faculty</th>
                     <th style="width: 12%;">Payment Type</th>

@@ -23,6 +23,9 @@ export default function PortalLayout({ eyebrow, title, description, aside, child
                     <div className="flex flex-col">
                         <span className="text-sm font-semibold tracking-[0.22em] text-emerald-700 uppercase">GSU Alumni</span>
                         <span className="text-foreground text-lg font-semibold">Payment Portal</span>
+                        <span className="text-xs font-semibold tracking-wide text-slate-600 uppercase">
+                            Gombe State University Alumni Association
+                        </span>
                     </div>
                 </Link>
 

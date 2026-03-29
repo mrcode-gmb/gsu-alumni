@@ -215,7 +215,7 @@
                     <h1>GOMBE STATE UNIVERSITY ALUMNI ASSOCIATION</h1>
                     <p>TUDUN WADA GOMBE, GOMBE STATE</p>
                     <p>{{ $receipt['graduation_session'] ?? 'Academic Session' }} Academic Session</p>
-                    <p class="receipt-title">Student's Receipt</p>
+                    <p class="receipt-title">Member's Receipt</p>
                 </td>
                 <td>
                     <div class="verify-box">
@@ -266,8 +266,8 @@
                 <th>Amount</th>
             </tr>
             <tr>
-                <td>Total Amount Paid</td>
-                <td>{{ $currency($receipt['amount'] ?? 0) }}</td>
+                <td>Payment Amount</td>
+                <td>{{ $currency($receipt['base_amount'] ?? 0) }}</td>
             </tr>
         </table>
 

@@ -67,7 +67,7 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
 
     return (
         <>
-            <Head title="Student Payment Form" />
+            <Head title="Member Payment Form" />
 
             <PortalLayout
                 aside={
@@ -110,7 +110,7 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
             >
                 <Card className="border-slate-200 bg-white/95 shadow-sm">
                     <CardHeader>
-                        <CardTitle>Student details</CardTitle>
+                        <CardTitle>Member details</CardTitle>
                         <CardDescription>Fill in the details exactly as they should appear on the payment request.</CardDescription>
                     </CardHeader>
                     <CardContent>

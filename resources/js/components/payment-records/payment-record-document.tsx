@@ -70,7 +70,7 @@ export function PaymentRecordDocument({
             <div className="grid gap-6 px-6 py-6 sm:px-8 xl:grid-cols-2">
                 <Card className="gap-0 border-slate-200 py-0 shadow-none">
                     <CardContent className="px-5 py-5">
-                        <h2 className="text-base font-semibold text-slate-950">Student information</h2>
+                        <h2 className="text-base font-semibold text-slate-950">Member information</h2>
                         <dl className="mt-4">
                             <DetailRow label="Full name" value={paymentRecord.full_name} />
                             <Separator />
