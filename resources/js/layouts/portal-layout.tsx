@@ -18,7 +18,7 @@ export default function PortalLayout({ eyebrow, title, description, aside, child
             <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
                 <Link href={route('home')} className="flex items-center gap-3">
                     <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-emerald-100 bg-white/90 p-2 shadow-sm">
-                        <AppLogoIcon className="size-full" alt="Gombe State University logo" />
+                        <AppLogoIcon className="size-full" alt="GSU Alumni Association logo" />
                     </div>
                     <div className="flex flex-col">
                         <span className="text-sm font-semibold tracking-[0.22em] text-emerald-700 uppercase">GSU Alumni</span>

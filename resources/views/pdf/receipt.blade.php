@@ -196,7 +196,6 @@
 <body>
 @php
     $currency = static fn ($amount) => 'NGN '.number_format((float) $amount, 2);
-    $transactionCharges = (float) ($receipt['portal_charge_amount'] ?? 0) + (float) ($receipt['paystack_charge_amount'] ?? 0);
 @endphp
 
 <div class="receipt-page">
@@ -213,7 +212,7 @@
                     @endif
                 </td>
                 <td class="title-block">
-                    <h1>GOMBE STATE UNIVERSITY</h1>
+                    <h1>GOMBE STATE UNIVERSITY ALUMNI ASSOCIATION</h1>
                     <p>TUDUN WADA GOMBE, GOMBE STATE</p>
                     <p>{{ $receipt['graduation_session'] ?? 'Academic Session' }} Academic Session</p>
                     <p class="receipt-title">Student's Receipt</p>
@@ -267,14 +266,6 @@
                 <th>Amount</th>
             </tr>
             <tr>
-                <td>Base Amount</td>
-                <td>{{ $currency($receipt['base_amount'] ?? 0) }}</td>
-            </tr>
-            <tr>
-                <td>Transaction Charges</td>
-                <td>{{ $currency($transactionCharges) }}</td>
-            </tr>
-            <tr class="total-row">
                 <td>Total Amount Paid</td>
                 <td>{{ $currency($receipt['amount'] ?? 0) }}</td>
             </tr>

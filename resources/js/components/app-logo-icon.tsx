@@ -4,7 +4,7 @@ import { type ComponentPropsWithoutRef } from 'react';
 type AppLogoIconProps = ComponentPropsWithoutRef<'img'>;
 
 export default function AppLogoIcon({
-    alt = 'Gombe State University logo',
+    alt = 'GSU Alumni Association logo',
     className,
     ...props
 }: AppLogoIconProps) {

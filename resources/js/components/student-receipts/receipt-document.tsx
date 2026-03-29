@@ -26,8 +26,6 @@ function formatDateTime(value: string | null): string {
 }
 
 export function ReceiptDocument({ receipt }: { receipt: StudentReceipt }) {
-    const transactionCharges = Number(receipt.portal_charge_amount) + Number(receipt.paystack_charge_amount);
-
     return (
         <article className="receipt-document relative overflow-hidden rounded-[1.5rem] border-2 border-slate-300 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -40,11 +38,11 @@ export function ReceiptDocument({ receipt }: { receipt: StudentReceipt }) {
                 <div className="border-b-4 border-emerald-700 px-5 py-6 sm:px-8">
                     <div className="grid gap-5 md:grid-cols-[88px,1fr,190px] md:items-start">
                         <div className="mx-auto flex size-20 shrink-0 items-center justify-center md:mx-0">
-                            <AppLogoIcon className="size-full" alt="Gombe State University logo" />
+                            <AppLogoIcon className="size-full" alt="GSU Alumni Association logo" />
                         </div>
 
                         <div className="text-center md:text-left">
-                            <p className="text-xl font-bold tracking-tight text-slate-950 sm:text-3xl">GOMBE STATE UNIVERSITY</p>
+                            <p className="text-xl font-bold tracking-tight text-slate-950 sm:text-3xl">GOMBE STATE UNIVERSITY ALUMNI ASSOCIATION</p>
                             <p className="mt-2 text-sm font-semibold tracking-wide text-slate-800 uppercase">
                                 Tudun Wada Gombe, Gombe State
                             </p>
@@ -111,18 +109,6 @@ export function ReceiptDocument({ receipt }: { receipt: StudentReceipt }) {
                                 <tr className="border-b border-slate-900">
                                     <th className="w-[68%] bg-slate-100 px-4 py-3 text-left font-bold text-slate-900">Description</th>
                                     <th className="bg-slate-100 px-4 py-3 text-right font-bold text-slate-900">Amount (NGN)</th>
-                                </tr>
-                                <tr className="border-b border-slate-300">
-                                    <td className="px-4 py-3 font-medium text-slate-800">Base amount</td>
-                                    <td className="px-4 py-3 text-right font-semibold text-slate-950">
-                                        {currencyFormatter.format(Number(receipt.base_amount))}
-                                    </td>
-                                </tr>
-                                <tr className="border-b border-slate-300">
-                                    <td className="px-4 py-3 font-medium text-slate-800">Transaction charges</td>
-                                    <td className="px-4 py-3 text-right font-semibold text-slate-950">
-                                        {currencyFormatter.format(transactionCharges)}
-                                    </td>
                                 </tr>
                                 <tr>
                                     <td className="bg-slate-900 px-4 py-3 text-base font-bold text-white">Total Amount Paid</td>

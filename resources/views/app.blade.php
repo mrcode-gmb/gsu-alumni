@@ -32,6 +32,16 @@
         </style>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <meta name="description" content="GSU Alumni Payment Portal for Gombe State University Alumni Association.">
+
+        <link rel="icon" href="{{ asset('images-removebg-preview.png') }}" type="image/png">
+        <link rel="apple-touch-icon" href="{{ asset('images-removebg-preview.png') }}">
+        <meta property="og:title" content="{{ config('app.name', 'GSU Alumni Payment Portal') }}">
+        <meta property="og:description" content="GSU Alumni Payment Portal for Gombe State University Alumni Association.">
+        <meta property="og:image" content="{{ asset('images-removebg-preview.png') }}">
+        <meta property="og:type" content="website">
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:image" content="{{ asset('images-removebg-preview.png') }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />

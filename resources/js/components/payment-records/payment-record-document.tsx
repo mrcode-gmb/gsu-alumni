@@ -43,7 +43,7 @@ export function PaymentRecordDocument({
                     <div className="space-y-3">
                         <div className="flex items-start gap-4">
                             <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-emerald-100 bg-white p-2 shadow-sm">
-                                <AppLogoIcon className="size-full" alt="Gombe State University logo" />
+                                <AppLogoIcon className="size-full" alt="GSU Alumni Association logo" />
                             </div>
                             <div>
                                 <p className="text-sm font-semibold tracking-[0.22em] text-emerald-700 uppercase">GSU Alumni Payment Portal</p>

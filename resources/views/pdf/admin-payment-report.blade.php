@@ -245,7 +245,7 @@
                     @endif
                 </td>
                 <td class="title">
-                    <h1>GOMBE STATE UNIVERSITY</h1>
+                    <h1>GOMBE STATE UNIVERSITY ALUMNI ASSOCIATION</h1>
                     <p>TUDUN WADA GOMBE, GOMBE STATE</p>
                     <p class="subtitle">Admin Payment Report</p>
                 </td>
