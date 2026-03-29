@@ -122,6 +122,7 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
     const isFailed = paymentRequest.payment_status === 'failed';
     const isAbandoned = paymentRequest.payment_status === 'abandoned';
     const successMessage = !isPending ? flash.success : null;
+    const hasPreviousSuccessfulPayments = paymentRequest.previous_successful_payments_count > 0;
 
     useEffect(() => {
         if (!isPending || !paymentRequest.can_initialize_payment || !paymentGatewayReady) {
@@ -292,6 +293,16 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
                 }
             >
                 <div className="space-y-4">
+                    {isPending && hasPreviousSuccessfulPayments && (
+                        <Alert>
+                            <AlertTitle>Previous payment found</AlertTitle>
+                            <AlertDescription>
+                                This matric number already has {paymentRequest.previous_successful_payments_count} successful payment
+                                {paymentRequest.previous_successful_payments_count === 1 ? '' : 's'} for this payment type. A new payment is still allowed.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
                     {successMessage && (
                         <Alert>
                             <AlertTitle>Payment update</AlertTitle>

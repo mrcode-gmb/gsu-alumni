@@ -259,7 +259,7 @@ class StudentPaymentRequestTest extends TestCase
         $this->assertSame('12200.00', $existingRequest->amount);
     }
 
-    public function test_successful_payment_request_blocks_creating_another_open_request_for_same_payment_type()
+    public function test_student_can_create_another_request_after_a_previous_successful_payment_for_the_same_type()
     {
         $programType = ProgramType::query()->where('name', 'Undergraduate')->firstOrFail();
         $paymentType = PaymentType::factory()->create([
@@ -280,25 +280,28 @@ class StudentPaymentRequestTest extends TestCase
             'payment_status' => PaymentRequestStatus::Successful,
         ]);
 
-        $response = $this
-            ->from(route('student-payments.create'))
-            ->post(route('student-payments.store'), [
-                'full_name' => 'Jamila Yusuf',
-                'matric_number' => 'GSU/16/9999',
-                'email' => 'jamila@example.com',
-                'phone_number' => '08070000000',
-                'department' => 'Economics',
-                'faculty' => 'Faculty of Arts and Social Sciences',
-                'program_type_id' => $programType->id,
-                'graduation_session' => '2021/2022',
-                'payment_type_id' => $paymentType->id,
-            ]);
+        $response = $this->post(route('student-payments.store'), [
+            'full_name' => 'Jamila Yusuf',
+            'matric_number' => 'GSU/16/9999',
+            'email' => 'jamila@example.com',
+            'phone_number' => '08070000000',
+            'department' => 'Economics',
+            'faculty' => 'Faculty of Arts and Social Sciences',
+            'program_type_id' => $programType->id,
+            'graduation_session' => '2021/2022',
+            'payment_type_id' => $paymentType->id,
+        ]);
 
-        $response
-            ->assertRedirect(route('student-payments.create'))
-            ->assertSessionHasErrors('payment_type_id');
+        $newRequest = PaymentRequest::query()
+            ->where('payment_status', PaymentRequestStatus::Pending)
+            ->latest('id')
+            ->firstOrFail();
 
-        $this->assertDatabaseCount('payment_requests', 1);
+        $response->assertRedirect(route('student-payments.show', $newRequest));
+        $this->assertDatabaseCount('payment_requests', 2);
+        $this->assertSame('GSU/16/9999', $newRequest->matric_number);
+        $this->assertSame($paymentType->id, $newRequest->payment_type_id);
+        $this->assertSame(PaymentRequestStatus::Pending, $newRequest->payment_status);
     }
 
     public function test_student_can_revisit_saved_review_page()

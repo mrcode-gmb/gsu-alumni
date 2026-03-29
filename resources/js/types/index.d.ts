@@ -180,6 +180,7 @@ export interface StudentPaymentRequest {
     paid_at: string | null;
     created_at: string | null;
     can_initialize_payment: boolean;
+    previous_successful_payments_count: number;
 }
 
 export interface StudentReceipt {

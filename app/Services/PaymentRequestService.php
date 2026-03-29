@@ -52,19 +52,6 @@ class PaymentRequestService
             $normalizedAttributes = $this->normalize($attributes);
             $payload = $this->buildPayload($normalizedAttributes, $programType, $paymentType);
 
-            $existingSuccessfulRequest = PaymentRequest::query()
-                ->where('matric_number', $payload['matric_number'])
-                ->where('payment_type_id', $paymentType->getKey())
-                ->where('payment_status', PaymentRequestStatus::Successful)
-                ->lockForUpdate()
-                ->first();
-
-            if ($existingSuccessfulRequest) {
-                throw ValidationException::withMessages([
-                    'payment_type_id' => 'This payment type has already been paid successfully for the supplied matric number.',
-                ]);
-            }
-
             $paymentRequest = PaymentRequest::query()
                 ->where('matric_number', $payload['matric_number'])
                 ->where('payment_type_id', $paymentType->getKey())

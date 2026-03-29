@@ -107,6 +107,13 @@ class StudentPaymentController extends Controller
 
     public function show(Request $request, PaymentRequest $paymentRequest): Response
     {
+        $previousSuccessfulPaymentsCount = PaymentRequest::query()
+            ->where('matric_number', $paymentRequest->matric_number)
+            ->where('payment_type_id', $paymentRequest->payment_type_id)
+            ->where('payment_status', \App\Enums\PaymentRequestStatus::Successful)
+            ->whereKeyNot($paymentRequest->getKey())
+            ->count();
+
         return Inertia::render('student-payments/show', [
             'paymentRequest' => [
                 'public_reference' => $paymentRequest->public_reference,
@@ -135,6 +142,7 @@ class StudentPaymentController extends Controller
                 'paid_at' => $paymentRequest->paid_at?->toIso8601String(),
                 'created_at' => $paymentRequest->created_at?->toIso8601String(),
                 'can_initialize_payment' => $paymentRequest->canInitializePayment(),
+                'previous_successful_payments_count' => $previousSuccessfulPaymentsCount,
             ],
             'paymentGatewayReady' => filled(config('services.paystack.secret_key'))
                 && filled(config('services.paystack.public_key')),
