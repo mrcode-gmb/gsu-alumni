@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\ChargeSettings;
 
 use App\Enums\ChargeCalculationMode;
+use App\Services\ChargeSettingService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,13 +16,22 @@ class UpdateChargeSettingRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $portalChargeMode = trim((string) $this->input('portal_charge_mode', ChargeCalculationMode::Fixed->value));
+
         $this->merge([
-            'portal_charge_mode' => trim((string) $this->input('portal_charge_mode', ChargeCalculationMode::Fixed->value)),
-            'portal_charge_value' => $this->filled('portal_charge_value') ? trim((string) $this->input('portal_charge_value')) : '0',
+            'portal_charge_mode' => $portalChargeMode,
+            'portal_charge_value' => $this->filled('portal_charge_value')
+                ? trim((string) $this->input('portal_charge_value'))
+                : ($portalChargeMode === ChargeCalculationMode::Fixed->value
+                    ? ChargeSettingService::DEFAULT_SERVICE_CHARGE
+                    : '0'),
             'paystack_percentage_rate' => $this->filled('paystack_percentage_rate') ? trim((string) $this->input('paystack_percentage_rate')) : '0',
-            'paystack_flat_fee' => $this->filled('paystack_flat_fee') ? trim((string) $this->input('paystack_flat_fee')) : '0',
-            'paystack_flat_fee_threshold' => $this->filled('paystack_flat_fee_threshold') ? trim((string) $this->input('paystack_flat_fee_threshold')) : '0',
-            'paystack_charge_cap' => $this->filled('paystack_charge_cap') ? trim((string) $this->input('paystack_charge_cap')) : '0',
+            'paystack_flat_fee' => $this->filled('paystack_flat_fee')
+                ? trim((string) $this->input('paystack_flat_fee'))
+                : ChargeSettingService::DEFAULT_PAYSTACK_FLAT_FEE,
+            'paystack_flat_fee_threshold' => $this->filled('paystack_flat_fee_threshold')
+                ? trim((string) $this->input('paystack_flat_fee_threshold'))
+                : ChargeSettingService::DEFAULT_PAYSTACK_FLAT_FEE_THRESHOLD,
         ]);
     }
 
@@ -36,7 +46,6 @@ class UpdateChargeSettingRequest extends FormRequest
             'paystack_percentage_rate' => ['required', 'numeric', 'min:0', 'max:100', 'decimal:0,4'],
             'paystack_flat_fee' => ['required', 'numeric', 'min:0', 'decimal:0,2', 'max:99999999.99'],
             'paystack_flat_fee_threshold' => ['required', 'numeric', 'min:0', 'decimal:0,2', 'max:99999999.99'],
-            'paystack_charge_cap' => ['required', 'numeric', 'min:0', 'decimal:0,2', 'max:99999999.99'],
         ];
     }
 

@@ -46,6 +46,9 @@ export interface PaymentType {
     id: number;
     name: string;
     amount: string;
+    service_charge_amount: string;
+    paystack_charge_amount: string;
+    total_amount: string;
     description: string | null;
     program_type_ids: string[];
     program_types: string[];
@@ -338,7 +341,6 @@ export interface ChargeSetting {
     paystack_percentage_rate: string;
     paystack_flat_fee: string;
     paystack_flat_fee_threshold: string;
-    paystack_charge_cap: string;
     updated_at: string | null;
     updated_by_name: string | null;
 }

@@ -8,6 +8,8 @@ use App\Http\Requests\Admin\PaymentTypes\UpdatePaymentTypeRequest;
 use App\Http\Requests\Admin\PaymentTypes\UpdatePaymentTypeStatusRequest;
 use App\Models\PaymentType;
 use App\Models\ProgramType;
+use App\Services\ChargeSettingService;
+use App\Services\PaymentTypeChargeService;
 use App\Services\PaymentTypeService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +21,8 @@ class PaymentTypeController extends Controller
 {
     public function __construct(
         protected PaymentTypeService $paymentTypeService,
+        protected PaymentTypeChargeService $paymentTypeChargeService,
+        protected ChargeSettingService $chargeSettingService,
     ) {
     }
 
@@ -58,6 +62,7 @@ class PaymentTypeController extends Controller
     {
         return Inertia::render('admin/payment-types/create', [
             'programTypeOptions' => $this->programTypeOptions(),
+            'chargeSetting' => $this->chargeSettingPayload(),
         ]);
     }
 
@@ -79,6 +84,7 @@ class PaymentTypeController extends Controller
                 ! $this->paymentTypeService->hasRecordedPayments($paymentType),
             ),
             'programTypeOptions' => $this->programTypeOptions(),
+            'chargeSetting' => $this->chargeSettingPayload(),
         ]);
     }
 
@@ -122,10 +128,15 @@ class PaymentTypeController extends Controller
      */
     protected function paymentTypePayload(PaymentType $paymentType, bool $canDelete): array
     {
+        $chargeBreakdown = $this->paymentTypeChargeService->resolveForPaymentType($paymentType);
+
         return [
             'id' => $paymentType->id,
             'name' => $paymentType->name,
             'amount' => $paymentType->amount,
+            'service_charge_amount' => $chargeBreakdown['service_charge_amount'],
+            'paystack_charge_amount' => $chargeBreakdown['paystack_charge_amount'],
+            'total_amount' => $chargeBreakdown['total_amount'],
             'description' => $paymentType->description,
             'program_type_ids' => $paymentType->programTypes
                 ->pluck('id')
@@ -160,5 +171,23 @@ class PaymentTypeController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    protected function chargeSettingPayload(): array
+    {
+        $chargeSetting = $this->chargeSettingService->current();
+
+        return [
+            'portal_charge_mode' => $chargeSetting->portal_charge_mode->value,
+            'portal_charge_value' => (string) $chargeSetting->portal_charge_value,
+            'paystack_percentage_rate' => number_format((float) $chargeSetting->paystack_percentage_rate, 4, '.', ''),
+            'paystack_flat_fee' => (string) $chargeSetting->paystack_flat_fee,
+            'paystack_flat_fee_threshold' => (string) $chargeSetting->paystack_flat_fee_threshold,
+            'updated_at' => $chargeSetting->updated_at?->toIso8601String(),
+            'updated_by_name' => $chargeSetting->updatedBy?->name,
+        ];
     }
 }

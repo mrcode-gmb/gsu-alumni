@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Enums\PaymentRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PaymentRecords\FilterPaymentRecordRequest;
@@ -14,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class PaymentRecordController extends Controller
 {
@@ -69,6 +71,34 @@ class PaymentRecordController extends Controller
                 'limit' => $result['limit'],
             ],
         ]);
+    }
+
+    public function downloadPdf(FilterPaymentRecordRequest $request): HttpResponse
+    {
+        $filters = $this->adminPaymentRecordService->normalizeFilters($request->validated());
+        $result = $this->adminPaymentRecordService->printableRecords($filters);
+        $summary = $this->adminPaymentRecordService->summaryForFilters($filters);
+        $activeFilters = $this->activeFiltersPayload($filters);
+
+        $paymentRecords = $result['records']
+            ->map(fn (PaymentRequest $paymentRequest): array => $this->paymentRecordListPayload($paymentRequest))
+            ->values()
+            ->all();
+
+        return Pdf::loadView('pdf.admin-payment-report', [
+            'summary' => $summary,
+            'paymentRecords' => $paymentRecords,
+            'activeFilters' => $activeFilters,
+            'reportMeta' => [
+                'total' => $result['total'],
+                'truncated' => $result['truncated'],
+                'limit' => $result['limit'],
+                'generated_at' => now()->toIso8601String(),
+            ],
+            'logoDataUri' => $this->receiptService->logoDataUri(),
+        ])
+            ->setPaper('a4', 'landscape')
+            ->download($this->pdfFilename());
     }
 
     public function printSingle(PaymentRequest $paymentRequest): Response
@@ -207,5 +237,10 @@ class PaymentRecordController extends Controller
                 'total' => $payload['total'],
             ],
         ];
+    }
+
+    protected function pdfFilename(): string
+    {
+        return 'GSU-Payment-Report-'.now()->format('Ymd-His').'.pdf';
     }
 }

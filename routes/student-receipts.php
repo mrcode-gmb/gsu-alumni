@@ -12,3 +12,6 @@ Route::post('payment-requests/{paymentRequest}/receipt', [StudentReceiptControll
 Route::get('receipts/{receipt}', [StudentReceiptController::class, 'show'])
     ->middleware('signed')
     ->name('student-receipts.show');
+Route::get('receipts/{receipt}/download', [StudentReceiptController::class, 'download'])
+    ->middleware('signed')
+    ->name('student-receipts.download');

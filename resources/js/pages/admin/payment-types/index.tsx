@@ -193,7 +193,10 @@ export default function PaymentTypeIndex({ paymentTypes, filters, summary }: Pay
                                                 <div>
                                                     <p className="font-medium text-slate-900">{paymentType.name}</p>
                                                     <p className="text-muted-foreground mt-1 text-sm">
-                                                        {currencyFormatter.format(Number(paymentType.amount))}
+                                                        Base: {currencyFormatter.format(Number(paymentType.amount))}
+                                                    </p>
+                                                    <p className="mt-1 text-sm font-medium text-emerald-700">
+                                                        Total: {currencyFormatter.format(Number(paymentType.total_amount))}
                                                     </p>
                                                 </div>
                                                 <Badge variant={paymentType.is_active ? 'default' : 'secondary'}>
@@ -203,6 +206,8 @@ export default function PaymentTypeIndex({ paymentTypes, filters, summary }: Pay
 
                                             <div className="mt-4 space-y-2 text-sm text-slate-600">
                                                 <p><span className="font-medium text-slate-800">Program types:</span> {paymentType.program_types.length > 0 ? paymentType.program_types.join(', ') : 'Not assigned'}</p>
+                                                <p><span className="font-medium text-slate-800">Website charge:</span> {currencyFormatter.format(Number(paymentType.service_charge_amount))}</p>
+                                                <p><span className="font-medium text-slate-800">Paystack charge:</span> {currencyFormatter.format(Number(paymentType.paystack_charge_amount))}</p>
                                                 <p><span className="font-medium text-slate-800">Order:</span> {paymentType.display_order ?? 'Auto'}</p>
                                                 <p><span className="font-medium text-slate-800">Description:</span> {paymentType.description || 'No description provided.'}</p>
                                             </div>
@@ -243,7 +248,10 @@ export default function PaymentTypeIndex({ paymentTypes, filters, summary }: Pay
                                         <tr className="border-b text-left">
                                             <th className="px-3 py-3 font-medium">Payment name</th>
                                             <th className="px-3 py-3 font-medium">Program types</th>
-                                            <th className="px-3 py-3 font-medium">Amount</th>
+                                            <th className="px-3 py-3 font-medium">Base amount</th>
+                                            <th className="px-3 py-3 font-medium">Website charge</th>
+                                            <th className="px-3 py-3 font-medium">Paystack charge</th>
+                                            <th className="px-3 py-3 font-medium">Total</th>
                                             <th className="px-3 py-3 font-medium">Status</th>
                                             <th className="px-3 py-3 font-medium">Order</th>
                                             <th className="px-3 py-3 font-medium">Description</th>
@@ -261,6 +269,15 @@ export default function PaymentTypeIndex({ paymentTypes, filters, summary }: Pay
                                                 </td>
                                                 <td className="px-3 py-4">
                                                     {currencyFormatter.format(Number(paymentType.amount))}
+                                                </td>
+                                                <td className="px-3 py-4">
+                                                    {currencyFormatter.format(Number(paymentType.service_charge_amount))}
+                                                </td>
+                                                <td className="px-3 py-4">
+                                                    {currencyFormatter.format(Number(paymentType.paystack_charge_amount))}
+                                                </td>
+                                                <td className="px-3 py-4 font-medium text-emerald-700">
+                                                    {currencyFormatter.format(Number(paymentType.total_amount))}
                                                 </td>
                                                 <td className="px-3 py-4">
                                                     <Badge variant={paymentType.is_active ? 'default' : 'secondary'}>

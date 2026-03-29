@@ -21,7 +21,6 @@ class ChargeSetting extends Model
         'paystack_percentage_rate',
         'paystack_flat_fee',
         'paystack_flat_fee_threshold',
-        'paystack_charge_cap',
         'updated_by',
     ];
 
@@ -36,7 +35,6 @@ class ChargeSetting extends Model
             'paystack_percentage_rate' => 'decimal:4',
             'paystack_flat_fee' => 'decimal:2',
             'paystack_flat_fee_threshold' => 'decimal:2',
-            'paystack_charge_cap' => 'decimal:2',
             'updated_by' => 'integer',
         ];
     }

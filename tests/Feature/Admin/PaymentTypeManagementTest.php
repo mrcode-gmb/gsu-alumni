@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Enums\ChargeCalculationMode;
 use App\Enums\PaymentRequestStatus;
+use App\Models\ChargeSetting;
 use App\Models\PaymentRequest;
 use App\Models\PaymentType;
 use App\Models\ProgramType;
@@ -58,6 +60,8 @@ class PaymentTypeManagementTest extends TestCase
         $this->assertDatabaseHas('payment_types', [
             'name' => 'Certificate Registration',
             'amount' => '15000.00',
+            'service_charge_amount' => '100.00',
+            'paystack_charge_amount' => '100.00',
             'is_active' => true,
             'display_order' => 1,
         ]);
@@ -122,6 +126,8 @@ class PaymentTypeManagementTest extends TestCase
             'id' => $paymentType->id,
             'name' => 'Alumni Registration Fee',
             'amount' => '7500.00',
+            'service_charge_amount' => '100.00',
+            'paystack_charge_amount' => '100.00',
             'is_active' => false,
             'display_order' => 2,
         ]);
@@ -191,6 +197,125 @@ class PaymentTypeManagementTest extends TestCase
 
         $this->assertDatabaseHas('payment_types', [
             'id' => $paymentType->id,
+        ]);
+    }
+
+    public function test_payment_type_saves_the_current_charge_setting_values_as_charge_amounts()
+    {
+        $admin = User::factory()->alumniAdmin()->create();
+        $programType = ProgramType::factory()->create();
+
+        ChargeSetting::query()->update([
+            'portal_charge_mode' => ChargeCalculationMode::Percentage,
+            'portal_charge_value' => '2.50',
+            'paystack_percentage_rate' => '1.5000',
+            'paystack_flat_fee' => '100.00',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.payment-types.store'), [
+            'name' => 'Late Clearance Fee',
+            'amount' => '10000',
+            'description' => 'Late administrative processing.',
+            'program_type_ids' => [$programType->id],
+            'is_active' => true,
+            'display_order' => 4,
+        ]);
+
+        $response
+            ->assertRedirect(route('admin.payment-types.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('payment_types', [
+            'name' => 'Late Clearance Fee',
+            'amount' => '10000.00',
+            'service_charge_amount' => '250.00',
+            'paystack_charge_amount' => '258.00',
+        ]);
+    }
+
+    public function test_payment_type_create_respects_the_configured_paystack_flat_fee_threshold()
+    {
+        $admin = User::factory()->alumniAdmin()->create();
+        $programType = ProgramType::factory()->create();
+
+        ChargeSetting::query()->update([
+            'portal_charge_mode' => ChargeCalculationMode::Fixed,
+            'portal_charge_value' => '100.00',
+            'paystack_percentage_rate' => '0.0000',
+            'paystack_flat_fee' => '100.00',
+            'paystack_flat_fee_threshold' => '3000.00',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.payment-types.store'), [
+            'name' => 'Custom Threshold Fee',
+            'amount' => '2800',
+            'description' => 'Custom threshold charge preview.',
+            'program_type_ids' => [$programType->id],
+            'is_active' => true,
+            'display_order' => 6,
+        ]);
+
+        $response
+            ->assertRedirect(route('admin.payment-types.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('payment_types', [
+            'name' => 'Custom Threshold Fee',
+            'amount' => '2800.00',
+            'service_charge_amount' => '100.00',
+            'paystack_charge_amount' => '0.00',
+        ]);
+    }
+
+    public function test_default_website_charge_applies_even_for_small_amounts_without_triggering_paystack_flat_fee()
+    {
+        $admin = User::factory()->alumniAdmin()->create();
+        $programType = ProgramType::factory()->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.payment-types.store'), [
+            'name' => 'Threshold Test Fee',
+            'amount' => '1.00',
+            'description' => 'Boundary amount for fixed charge.',
+            'program_type_ids' => [$programType->id],
+            'is_active' => true,
+            'display_order' => 3,
+        ]);
+
+        $response
+            ->assertRedirect(route('admin.payment-types.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('payment_types', [
+            'name' => 'Threshold Test Fee',
+            'amount' => '1.00',
+            'service_charge_amount' => '100.00',
+            'paystack_charge_amount' => '0.00',
+        ]);
+    }
+
+    public function test_paystack_flat_fee_is_applied_when_payable_amount_reaches_2500_or_more()
+    {
+        $admin = User::factory()->alumniAdmin()->create();
+        $programType = ProgramType::factory()->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.payment-types.store'), [
+            'name' => 'Threshold Inclusive Fee',
+            'amount' => '2400.00',
+            'description' => 'Tests the inclusive paystack flat fee threshold.',
+            'program_type_ids' => [$programType->id],
+            'is_active' => true,
+            'display_order' => 5,
+        ]);
+
+        $response
+            ->assertRedirect(route('admin.payment-types.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('payment_types', [
+            'name' => 'Threshold Inclusive Fee',
+            'amount' => '2400.00',
+            'service_charge_amount' => '100.00',
+            'paystack_charge_amount' => '100.00',
         ]);
     }
 }

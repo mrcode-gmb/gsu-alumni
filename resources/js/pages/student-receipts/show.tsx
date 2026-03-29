@@ -4,18 +4,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { type SharedData, type StudentReceipt } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Download, Search, Wallet } from 'lucide-react';
+import { Download, Wallet } from 'lucide-react';
 
 interface StudentReceiptShowProps {
     receipt: StudentReceipt;
+    downloadUrl: string;
 }
 
-export default function StudentReceiptShow({ receipt }: StudentReceiptShowProps) {
+export default function StudentReceiptShow({ receipt, downloadUrl }: StudentReceiptShowProps) {
     const { flash } = usePage<SharedData>().props;
-
-    const printReceipt = () => {
-        window.print();
-    };
 
     return (
         <>
@@ -30,33 +27,31 @@ export default function StudentReceiptShow({ receipt }: StudentReceiptShowProps)
                         <div>
                             <p className="text-sm font-semibold tracking-[0.22em] text-emerald-700 uppercase">GSU Alumni Payment Portal</p>
                             <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Official student receipt</h1>
-                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                                This receipt is laid out for official printing and PDF download, with the verified payment information already embedded in the document.
-                            </p>
                         </div>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                        <Button variant="outline" asChild>
-                            <Link href={route('student-receipts.lookup')}>
-                                <Search />
-                                Find another receipt
-                            </Link>
-                        </Button>
                         <Button variant="outline" asChild>
                             <Link href={route('home')}>
                                 <Wallet />
                                 New payment
                             </Link>
                         </Button>
-                        <Button onClick={printReceipt}>
-                            <Download />
-                            Print / Download PDF
+                        <Button asChild>
+                            <a href={downloadUrl}>
+                                <Download />
+                                Download receipt
+                            </a>
                         </Button>
                     </div>
                 </div>
 
                 <div className="mx-auto mt-6 max-w-5xl space-y-4 px-4 sm:px-6 lg:px-8">
+                    <Alert className="receipt-screen-only border-emerald-200 bg-emerald-50 text-emerald-950">
+                        <AlertTitle>Before you leave</AlertTitle>
+                        <AlertDescription>Please download this receipt before leaving the page.</AlertDescription>
+                    </Alert>
+
                     {flash.success && (
                         <Alert className="receipt-screen-only">
                             <AlertTitle>Receipt update</AlertTitle>
@@ -72,6 +67,17 @@ export default function StudentReceiptShow({ receipt }: StudentReceiptShowProps)
                     )}
 
                     <ReceiptDocument receipt={receipt} />
+
+                    <div className="receipt-screen-only pt-2">
+                        <div className="rounded-3xl border border-emerald-200 bg-white/95 p-4 shadow-sm sm:p-5">
+                            <Button size="lg" className="h-14 w-full text-base font-semibold sm:h-16 sm:text-lg" asChild>
+                                <a href={downloadUrl}>
+                                    <Download />
+                                    Download receipt
+                                </a>
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </>

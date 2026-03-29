@@ -85,6 +85,41 @@ class AdminPaymentRecordService
     }
 
     /**
+     * @param  array<string, string>  $filters
+     * @return array<string, int|string>
+     */
+    public function summaryForFilters(array $filters): array
+    {
+        $summary = $this->filteredBaseQuery($filters)
+            ->selectRaw('COUNT(*) as total_payment_requests')
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_successful_payments',
+                [PaymentRequestStatus::Successful->value],
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_pending_payments',
+                [PaymentRequestStatus::Pending->value],
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_failed_payments',
+                [PaymentRequestStatus::Failed->value],
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN payment_status = ? THEN amount ELSE 0 END), 0) as total_amount_collected',
+                [PaymentRequestStatus::Successful->value],
+            )
+            ->first();
+
+        return [
+            'total_payment_requests' => (int) ($summary?->total_payment_requests ?? 0),
+            'total_successful_payments' => (int) ($summary?->total_successful_payments ?? 0),
+            'total_pending_payments' => (int) ($summary?->total_pending_payments ?? 0),
+            'total_failed_payments' => (int) ($summary?->total_failed_payments ?? 0),
+            'total_amount_collected' => number_format((float) ($summary?->total_amount_collected ?? 0), 2, '.', ''),
+        ];
+    }
+
+    /**
      * @return Collection<int, PaymentRequest>
      */
     public function recentRecords(int $limit = 6): Collection
@@ -222,10 +257,20 @@ class AdminPaymentRecordService
      */
     protected function filteredQuery(array $filters): Builder
     {
+        return $this->applySort(
+            $this->filteredBaseQuery($filters)->with(['receipt:id,payment_request_id,receipt_number,issued_at']),
+            $filters['sort'] ?? 'newest',
+        );
+    }
+
+    /**
+     * @param  array<string, string>  $filters
+     */
+    protected function filteredBaseQuery(array $filters): Builder
+    {
         $search = trim($filters['search'] ?? '');
 
-        $query = PaymentRequest::query()
-            ->with(['receipt:id,payment_request_id,receipt_number,issued_at']);
+        $query = PaymentRequest::query();
 
         if ($search !== '') {
             $query->where(function (Builder $query) use ($search): void {
@@ -249,7 +294,7 @@ class AdminPaymentRecordService
             ->when(($filters['date_from'] ?? '') !== '', fn (Builder $query): Builder => $query->whereDate('created_at', '>=', $filters['date_from']))
             ->when(($filters['date_to'] ?? '') !== '', fn (Builder $query): Builder => $query->whereDate('created_at', '<=', $filters['date_to']));
 
-        return $this->applySort($query, $filters['sort'] ?? 'newest');
+        return $query;
     }
 
     protected function applySort(Builder $query, string $sort): Builder

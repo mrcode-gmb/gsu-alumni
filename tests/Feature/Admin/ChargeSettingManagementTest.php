@@ -44,7 +44,6 @@ class ChargeSettingManagementTest extends TestCase
             'paystack_percentage_rate' => '1.5000',
             'paystack_flat_fee' => '100.00',
             'paystack_flat_fee_threshold' => '2500.00',
-            'paystack_charge_cap' => '2000.00',
         ]);
 
         $response
@@ -58,7 +57,6 @@ class ChargeSettingManagementTest extends TestCase
         $this->assertSame('1.5000', number_format((float) $chargeSetting->paystack_percentage_rate, 4, '.', ''));
         $this->assertSame('100.00', $chargeSetting->paystack_flat_fee);
         $this->assertSame('2500.00', $chargeSetting->paystack_flat_fee_threshold);
-        $this->assertSame('2000.00', $chargeSetting->paystack_charge_cap);
         $this->assertSame($superAdmin->id, $chargeSetting->updated_by);
     }
 }

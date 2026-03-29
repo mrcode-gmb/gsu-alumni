@@ -1,16 +1,17 @@
 import Heading from '@/components/heading';
 import { PaymentTypeForm, type PaymentTypeFormData } from '@/components/payment-types/payment-type-form';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type PaymentType, type SelectOption } from '@/types';
+import { type BreadcrumbItem, type ChargeSetting, type PaymentType, type SelectOption } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { type FormEventHandler } from 'react';
 
 interface EditPaymentTypeProps {
     paymentType: PaymentType;
     programTypeOptions: SelectOption[];
+    chargeSetting: ChargeSetting;
 }
 
-export default function EditPaymentType({ paymentType, programTypeOptions }: EditPaymentTypeProps) {
+export default function EditPaymentType({ paymentType, programTypeOptions, chargeSetting }: EditPaymentTypeProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
@@ -47,7 +48,7 @@ export default function EditPaymentType({ paymentType, programTypeOptions }: Edi
             <div className="space-y-6 p-4">
                 <Heading
                     title={`Edit ${paymentType.name}`}
-                    description="Update the payment details while preserving future compatibility with payment records."
+                    description="Update the payment details. The current admin charge settings will recalculate the saved service and Paystack charge amounts when you save."
                 />
 
                 <PaymentTypeForm
@@ -56,6 +57,7 @@ export default function EditPaymentType({ paymentType, programTypeOptions }: Edi
                     submitLabel="Save changes"
                     cancelHref={route('admin.payment-types.index')}
                     programTypeOptions={programTypeOptions}
+                    chargeSetting={chargeSetting}
                     data={data}
                     errors={errors}
                     processing={processing}

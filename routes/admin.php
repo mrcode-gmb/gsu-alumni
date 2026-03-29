@@ -8,7 +8,7 @@ use App\Http\Controllers\Admin\PaymentRecordController;
 use App\Http\Controllers\Admin\ProgramTypeController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'super_admin'])
+Route::middleware(['auth', 'verified', 'admin_role'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified', 'super_admin'])
         Route::delete('departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
 
         Route::get('payment-records/print', [PaymentRecordController::class, 'print'])->name('payment-records.print');
+        Route::get('payment-records/download-pdf', [PaymentRecordController::class, 'downloadPdf'])->name('payment-records.download-pdf');
         Route::get('payment-records', [PaymentRecordController::class, 'index'])->name('payment-records.index');
         Route::get('payment-records/{paymentRequest}', [PaymentRecordController::class, 'show'])->name('payment-records.show');
         Route::get('payment-records/{paymentRequest}/print', [PaymentRecordController::class, 'printSingle'])->name('payment-records.print-single');

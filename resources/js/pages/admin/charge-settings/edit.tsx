@@ -25,7 +25,6 @@ export default function EditChargeSettings({ chargeSetting, modeOptions, preview
         paystack_percentage_rate: chargeSetting.paystack_percentage_rate,
         paystack_flat_fee: chargeSetting.paystack_flat_fee,
         paystack_flat_fee_threshold: chargeSetting.paystack_flat_fee_threshold,
-        paystack_charge_cap: chargeSetting.paystack_charge_cap,
     });
 
     const submit: FormEventHandler<HTMLFormElement> = (event) => {
@@ -40,7 +39,7 @@ export default function EditChargeSettings({ chargeSetting, modeOptions, preview
             <div className="space-y-6 p-4">
                 <Heading
                     title="Charge settings"
-                    description="Manage the two separate charges used by the portal: your own custom charge and the Paystack payment gateway charge."
+                    description="Manage the two separate charges used by the portal: your website service charge and the Paystack payment gateway charge."
                 />
 
                 {flash.success && (

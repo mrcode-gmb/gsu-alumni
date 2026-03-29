@@ -196,6 +196,34 @@ class PaymentRecordDashboardTest extends TestCase
             ->assertSee('Maryam Goni');
     }
 
+    public function test_admin_can_download_filtered_payment_report_pdf()
+    {
+        $admin = User::factory()->alumniAdmin()->create();
+        $paymentType = PaymentType::factory()->create([
+            'name' => 'Certificate Registration',
+        ]);
+
+        PaymentRequest::factory()->create([
+            'full_name' => 'Halima Sule',
+            'faculty' => 'Faculty of Sciences',
+            'payment_type_id' => $paymentType->id,
+            'payment_type_name' => $paymentType->name,
+            'payment_status' => PaymentRequestStatus::Successful,
+            'amount' => '12500.00',
+            'paid_at' => now(),
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->get(route('admin.payment-records.download-pdf', [
+                'faculty' => 'Faculty of Sciences',
+                'sort' => 'newest',
+            ]));
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+    }
+
     protected function createReceiptFor(PaymentRequest $paymentRequest, string $receiptNumber): Receipt
     {
         return Receipt::query()->create([

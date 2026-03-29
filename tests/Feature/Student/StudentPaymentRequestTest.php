@@ -98,7 +98,10 @@ class StudentPaymentRequestTest extends TestCase
             'program_type_name' => 'Undergraduate',
             'payment_type_id' => $paymentType->id,
             'payment_type_name' => 'Alumni Registration',
-            'amount' => '5000.00',
+            'base_amount' => '5000.00',
+            'portal_charge_amount' => '100.00',
+            'paystack_charge_amount' => '100.00',
+            'amount' => '5200.00',
             'payment_status' => PaymentRequestStatus::Pending->value,
         ]);
     }
@@ -110,8 +113,6 @@ class StudentPaymentRequestTest extends TestCase
             'portal_charge_value' => '2.50',
             'paystack_percentage_rate' => '1.5000',
             'paystack_flat_fee' => '100.00',
-            'paystack_flat_fee_threshold' => '2500.00',
-            'paystack_charge_cap' => '2000.00',
         ]);
 
         $programType = ProgramType::query()->where('name', 'Undergraduate')->firstOrFail();
@@ -252,7 +253,10 @@ class StudentPaymentRequestTest extends TestCase
         $this->assertSame('08099999999', $existingRequest->phone_number);
         $this->assertSame('musa@example.com', $existingRequest->email);
         $this->assertSame('Undergraduate', $existingRequest->program_type_name);
-        $this->assertSame('12000.00', $existingRequest->amount);
+        $this->assertSame('12000.00', $existingRequest->base_amount);
+        $this->assertSame('100.00', $existingRequest->portal_charge_amount);
+        $this->assertSame('100.00', $existingRequest->paystack_charge_amount);
+        $this->assertSame('12200.00', $existingRequest->amount);
     }
 
     public function test_successful_payment_request_blocks_creating_another_open_request_for_same_payment_type()
@@ -407,5 +411,67 @@ class StudentPaymentRequestTest extends TestCase
             ->assertSessionHasErrors('payment_type_id');
 
         $this->assertDatabaseCount('payment_requests', 0);
+    }
+
+    public function test_website_charge_is_added_even_for_small_payments_without_triggering_paystack_flat_fee()
+    {
+        $programType = ProgramType::query()->where('name', 'Undergraduate')->firstOrFail();
+        $paymentType = PaymentType::factory()->create([
+            'name' => 'Boundary Fee',
+            'amount' => 1,
+            'description' => 'Boundary amount for fixed charge.',
+            'is_active' => true,
+        ]);
+        $paymentType->programTypes()->sync([$programType->id]);
+
+        $this->post(route('student-payments.store'), [
+            'full_name' => 'Hauwa Bello',
+            'matric_number' => 'GSU/21/0101',
+            'email' => 'hauwa@example.com',
+            'phone_number' => '08012340000',
+            'department' => 'Computer Science',
+            'faculty' => 'Faculty of Sciences',
+            'program_type_id' => $programType->id,
+            'graduation_session' => '2024/2025',
+            'payment_type_id' => $paymentType->id,
+        ])->assertRedirect();
+
+        $paymentRequest = PaymentRequest::query()->latest('id')->firstOrFail();
+
+        $this->assertSame('1.00', $paymentRequest->base_amount);
+        $this->assertSame('100.00', $paymentRequest->portal_charge_amount);
+        $this->assertSame('0.00', $paymentRequest->paystack_charge_amount);
+        $this->assertSame('101.00', $paymentRequest->amount);
+    }
+
+    public function test_paystack_flat_fee_is_applied_when_payable_amount_reaches_2500_or_more()
+    {
+        $programType = ProgramType::query()->where('name', 'Undergraduate')->firstOrFail();
+        $paymentType = PaymentType::factory()->create([
+            'name' => 'Inclusive Threshold Fee',
+            'amount' => 2400,
+            'description' => 'Tests the inclusive paystack flat fee threshold.',
+            'is_active' => true,
+        ]);
+        $paymentType->programTypes()->sync([$programType->id]);
+
+        $this->post(route('student-payments.store'), [
+            'full_name' => 'Maimuna Sani',
+            'matric_number' => 'GSU/21/0202',
+            'email' => 'maimuna@example.com',
+            'phone_number' => '08022223333',
+            'department' => 'Computer Science',
+            'faculty' => 'Faculty of Sciences',
+            'program_type_id' => $programType->id,
+            'graduation_session' => '2024/2025',
+            'payment_type_id' => $paymentType->id,
+        ])->assertRedirect();
+
+        $paymentRequest = PaymentRequest::query()->latest('id')->firstOrFail();
+
+        $this->assertSame('2400.00', $paymentRequest->base_amount);
+        $this->assertSame('100.00', $paymentRequest->portal_charge_amount);
+        $this->assertSame('100.00', $paymentRequest->paystack_charge_amount);
+        $this->assertSame('2600.00', $paymentRequest->amount);
     }
 }

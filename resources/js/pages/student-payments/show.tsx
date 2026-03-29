@@ -6,11 +6,12 @@ import PortalLayout from '@/layouts/portal-layout';
 import { type SharedData, type StudentPaymentRequest } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowRight, CheckCircle2, Clock3, FileCheck2, RefreshCcw, XCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface StudentPaymentShowProps {
     paymentRequest: StudentPaymentRequest;
     paymentGatewayReady: boolean;
+    autoOpenCheckout: boolean;
 }
 
 interface PaystackPopupTransaction {
@@ -107,34 +108,20 @@ async function preparePopupCheckout(publicReference: string) {
     return payload.checkout;
 }
 
-export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady }: StudentPaymentShowProps) {
+export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady, autoOpenCheckout }: StudentPaymentShowProps) {
     const { flash } = usePage<SharedData>().props;
     const [popupReady, setPopupReady] = useState(false);
     const [popupLoading, setPopupLoading] = useState(false);
     const [inlineNotice, setInlineNotice] = useState<string | null>(null);
     const [inlineError, setInlineError] = useState<string | null>(null);
     const [checkoutPrepared, setCheckoutPrepared] = useState(Boolean(paymentRequest.paystack_reference));
+    const autoOpenedCheckout = useRef(false);
 
     const isSuccessful = paymentRequest.payment_status === 'successful';
     const isPending = paymentRequest.payment_status === 'pending';
     const isFailed = paymentRequest.payment_status === 'failed';
     const isAbandoned = paymentRequest.payment_status === 'abandoned';
-
-    const title = isSuccessful
-        ? 'Your payment was verified successfully'
-        : isFailed
-          ? 'Your payment attempt failed'
-          : isAbandoned
-            ? 'Your payment was abandoned'
-            : 'Your payment request is ready';
-
-    const description = isSuccessful
-        ? 'Your transaction has been confirmed server-side and the request has been marked successful.'
-        : isFailed
-          ? 'Paystack did not confirm a successful payment for this request.'
-          : isAbandoned
-            ? 'The checkout session did not complete. You can create a fresh request if you still need to pay.'
-            : 'Your request is pending. You can open Paystack here and re-check the status after checkout if needed.';
+    const successMessage = !isPending ? flash.success : null;
 
     useEffect(() => {
         if (!isPending || !paymentRequest.can_initialize_payment || !paymentGatewayReady) {
@@ -172,7 +159,7 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
         };
     }, [isPending, paymentGatewayReady, paymentRequest.can_initialize_payment]);
 
-    const handleInlineCheckout = async () => {
+    async function handleInlineCheckout() {
         setInlineError(null);
         setInlineNotice(null);
         setPopupLoading(true);
@@ -213,16 +200,22 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
         } finally {
             setPopupLoading(false);
         }
-    };
+    }
+
+    useEffect(() => {
+        if (!autoOpenCheckout || autoOpenedCheckout.current || !isPending || !paymentRequest.can_initialize_payment || !paymentGatewayReady || !popupReady || popupLoading) {
+            return;
+        }
+
+        autoOpenedCheckout.current = true;
+        void handleInlineCheckout();
+    }, [autoOpenCheckout, isPending, paymentGatewayReady, paymentRequest.can_initialize_payment, popupReady, popupLoading]);
 
     return (
         <>
             <Head title="Payment Request Review" />
 
             <PortalLayout
-                eyebrow="Request Saved"
-                title={title}
-                description={description}
                 aside={
                     <Card className="border-slate-200 bg-white/95 shadow-sm">
                         <CardHeader>
@@ -294,19 +287,15 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
                                     If you still need to pay, create a fresh payment request and try again.
                                 </p>
                             )}
-
-                            <Button variant="outline" asChild>
-                                <Link href={route('student-payments.create')}>Create another request</Link>
-                            </Button>
                         </CardContent>
                     </Card>
                 }
             >
                 <div className="space-y-4">
-                    {flash.success && (
+                    {successMessage && (
                         <Alert>
-                            <AlertTitle>Saved successfully</AlertTitle>
-                            <AlertDescription>{flash.success}</AlertDescription>
+                            <AlertTitle>Payment update</AlertTitle>
+                            <AlertDescription>{successMessage}</AlertDescription>
                         </Alert>
                     )}
 

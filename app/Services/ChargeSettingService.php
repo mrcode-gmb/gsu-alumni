@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\DB;
 
 class ChargeSettingService
 {
+    public const DEFAULT_SERVICE_CHARGE = '100.00';
+    public const DEFAULT_PAYSTACK_FLAT_FEE = '100.00';
+    public const DEFAULT_PAYSTACK_FLAT_FEE_THRESHOLD = '2500.00';
+
     public function current(): ChargeSetting
     {
         return ChargeSetting::query()->orderBy('id')->first()
@@ -40,11 +44,10 @@ class ChargeSettingService
     {
         return [
             'portal_charge_mode' => ChargeCalculationMode::Fixed,
-            'portal_charge_value' => '0.00',
+            'portal_charge_value' => self::DEFAULT_SERVICE_CHARGE,
             'paystack_percentage_rate' => '0.0000',
-            'paystack_flat_fee' => '0.00',
-            'paystack_flat_fee_threshold' => '0.00',
-            'paystack_charge_cap' => '0.00',
+            'paystack_flat_fee' => self::DEFAULT_PAYSTACK_FLAT_FEE,
+            'paystack_flat_fee_threshold' => self::DEFAULT_PAYSTACK_FLAT_FEE_THRESHOLD,
             'updated_by' => null,
         ];
     }
@@ -61,7 +64,6 @@ class ChargeSettingService
             'paystack_percentage_rate' => number_format((float) $attributes['paystack_percentage_rate'], 4, '.', ''),
             'paystack_flat_fee' => number_format((float) $attributes['paystack_flat_fee'], 2, '.', ''),
             'paystack_flat_fee_threshold' => number_format((float) $attributes['paystack_flat_fee_threshold'], 2, '.', ''),
-            'paystack_charge_cap' => number_format((float) $attributes['paystack_charge_cap'], 2, '.', ''),
         ];
     }
 }

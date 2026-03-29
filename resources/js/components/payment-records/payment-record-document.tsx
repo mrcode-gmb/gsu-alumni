@@ -34,6 +34,8 @@ export function PaymentRecordDocument({
     paymentRecord: AdminPaymentRecordDetail;
     note?: string;
 }) {
+    const transactionCharges = Number(paymentRecord.portal_charge_amount) + Number(paymentRecord.paystack_charge_amount);
+
     return (
         <article className="admin-print-document overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
             <div className="border-b border-slate-200 bg-[linear-gradient(135deg,_#eff6ff_0%,_#ffffff_42%,_#f8fafc_100%)] px-6 py-6 sm:px-8">
@@ -97,9 +99,7 @@ export function PaymentRecordDocument({
                             <Separator />
                             <DetailRow label="Base amount" value={currencyFormatter.format(Number(paymentRecord.base_amount))} />
                             <Separator />
-                            <DetailRow label="Our own charge" value={currencyFormatter.format(Number(paymentRecord.portal_charge_amount))} />
-                            <Separator />
-                            <DetailRow label="Paystack gateway charge" value={currencyFormatter.format(Number(paymentRecord.paystack_charge_amount))} />
+                            <DetailRow label="Transaction charges" value={currencyFormatter.format(transactionCharges)} />
                             <Separator />
                             <DetailRow label="Total amount" value={currencyFormatter.format(Number(paymentRecord.amount))} />
                             <Separator />

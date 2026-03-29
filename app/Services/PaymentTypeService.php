@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Schema;
 
 class PaymentTypeService
 {
+    public function __construct(
+        protected PaymentTypeChargeService $paymentTypeChargeService,
+    ) {
+    }
+
     public function create(array $attributes): PaymentType
     {
         return DB::transaction(function () use ($attributes) {
@@ -105,10 +110,14 @@ class PaymentTypeService
     protected function normalize(array $attributes): array
     {
         $displayOrder = $attributes['display_order'] ?? null;
+        $baseAmount = number_format((float) $attributes['amount'], 2, '.', '');
+        $chargeBreakdown = $this->paymentTypeChargeService->calculateForBaseAmount($baseAmount);
 
         return [
             'name' => trim((string) $attributes['name']),
-            'amount' => number_format((float) $attributes['amount'], 2, '.', ''),
+            'amount' => $baseAmount,
+            'service_charge_amount' => $chargeBreakdown['service_charge_amount'],
+            'paystack_charge_amount' => $chargeBreakdown['paystack_charge_amount'],
             'description' => filled($attributes['description'] ?? null)
                 ? trim((string) $attributes['description'])
                 : null,

@@ -1,7 +1,7 @@
 import Heading from '@/components/heading';
 import { PaymentTypeForm, type PaymentTypeFormData } from '@/components/payment-types/payment-type-form';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type SelectOption } from '@/types';
+import { type BreadcrumbItem, type ChargeSetting, type SelectOption } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { type FormEventHandler } from 'react';
 
@@ -22,9 +22,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface CreatePaymentTypeProps {
     programTypeOptions: SelectOption[];
+    chargeSetting: ChargeSetting;
 }
 
-export default function CreatePaymentType({ programTypeOptions }: CreatePaymentTypeProps) {
+export default function CreatePaymentType({ programTypeOptions, chargeSetting }: CreatePaymentTypeProps) {
     const { data, setData, post, processing, errors } = useForm<PaymentTypeFormData>({
         name: '',
         amount: '',
@@ -46,7 +47,7 @@ export default function CreatePaymentType({ programTypeOptions }: CreatePaymentT
             <div className="space-y-6 p-4">
                 <Heading
                     title="Create payment type"
-                    description="Add a new school-approved payment category for future student payments."
+                    description="Add a new school-approved payment category. The current admin charge settings will calculate the extra two charge amounts automatically."
                 />
 
                 <PaymentTypeForm
@@ -55,6 +56,7 @@ export default function CreatePaymentType({ programTypeOptions }: CreatePaymentT
                     submitLabel="Create payment type"
                     cancelHref={route('admin.payment-types.index')}
                     programTypeOptions={programTypeOptions}
+                    chargeSetting={chargeSetting}
                     data={data}
                     errors={errors}
                     processing={processing}

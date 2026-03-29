@@ -13,13 +13,16 @@ const currencyFormatter = new Intl.NumberFormat('en-NG', {
     minimumFractionDigits: 2,
 });
 
+const DEFAULT_WEBSITE_CHARGE = 100;
+const DEFAULT_PAYSTACK_EXTRA_FEE = 100;
+const DEFAULT_PAYSTACK_EXTRA_FEE_THRESHOLD = 2500;
+
 export type ChargeSettingFormData = {
     portal_charge_mode: ChargeCalculationMode;
     portal_charge_value: string;
     paystack_percentage_rate: string;
     paystack_flat_fee: string;
     paystack_flat_fee_threshold: string;
-    paystack_charge_cap: string;
 };
 
 interface ChargeSettingsFormProps {
@@ -45,13 +48,17 @@ export function ChargeSettingsForm({
     setData,
     onSubmit,
 }: ChargeSettingsFormProps) {
+    const websiteChargePreviewValue = Number.parseFloat(data.portal_charge_value || '0') || 0;
+    const paystackFlatFeePreviewValue = Number.parseFloat(data.paystack_flat_fee || '0') || 0;
+    const paystackFlatFeeThresholdValue = Number.parseFloat(data.paystack_flat_fee_threshold || '0') || 0;
+
     return (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr),minmax(320px,0.8fr)]">
             <Card>
                 <CardHeader>
                     <CardTitle>Charge configuration</CardTitle>
                     <CardDescription>
-                        Configure the two separate charge types used by the portal: your own custom charge and the Paystack payment gateway charge. Enter `0` to disable any field.
+                        Configure the two separate charge types used by the portal: your website service charge and the Paystack payment gateway charge. Enter `0` to disable any field.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -59,9 +66,10 @@ export function ChargeSettingsForm({
                         <div className="grid gap-4 lg:grid-cols-2">
                             <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4">
                                 <p className="text-xs font-semibold tracking-[0.16em] text-emerald-800 uppercase">Charge type 1</p>
-                                <h2 className="mt-2 text-base font-semibold text-emerald-950">Our own charge</h2>
+                                <h2 className="mt-2 text-base font-semibold text-emerald-950">Website service charge</h2>
                                 <p className="mt-2 text-sm leading-6 text-emerald-950/85">
-                                    This is the extra charge you decide to add for the portal, school processing, or any internal handling fee.
+                                    This is your own website or developer service charge, separate from Paystack.
+                                    The default setup is {currencyFormatter.format(websiteChargePreviewValue || DEFAULT_WEBSITE_CHARGE)} and it applies to every payment.
                                 </p>
                             </div>
 
@@ -69,16 +77,16 @@ export function ChargeSettingsForm({
                                 <p className="text-xs font-semibold tracking-[0.16em] text-sky-800 uppercase">Charge type 2</p>
                                 <h2 className="mt-2 text-base font-semibold text-sky-950">Paystack gateway charge</h2>
                                 <p className="mt-2 text-sm leading-6 text-sky-950/85">
-                                    This is separate from your own charge. It represents the payment gateway charge you want the student to cover.
+                                    This is separate from your website charge. It represents the payment gateway charge you want the student to cover, including the extra flat fee of {currencyFormatter.format(paystackFlatFeePreviewValue || DEFAULT_PAYSTACK_EXTRA_FEE)} for payable amounts of {currencyFormatter.format(paystackFlatFeeThresholdValue || DEFAULT_PAYSTACK_EXTRA_FEE_THRESHOLD)} and above.
                                 </p>
                             </div>
                         </div>
 
                         <section className="space-y-4">
                             <div>
-                                <h2 className="text-base font-semibold text-slate-950">Our own charge</h2>
+                                <h2 className="text-base font-semibold text-slate-950">Website service charge</h2>
                                 <p className="mt-1 text-sm text-slate-600">
-                                    This is your own custom charge, separate from the payment gateway. It is calculated on the payment type amount before the Paystack gateway charge is added.
+                                    This is your own developer or website charge, separate from the payment gateway. In fixed mode it is added to every payment amount.
                                 </p>
                             </div>
 
@@ -106,7 +114,7 @@ export function ChargeSettingsForm({
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="portal_charge_value">
-                                        {data.portal_charge_mode === 'percentage' ? 'Our charge percentage (%)' : 'Our fixed charge amount (NGN)'}
+                                        {data.portal_charge_mode === 'percentage' ? 'Website charge percentage (%)' : 'Website fixed charge amount (NGN)'}
                                     </Label>
                                     <Input
                                         id="portal_charge_value"
@@ -117,6 +125,9 @@ export function ChargeSettingsForm({
                                         onChange={(event) => setData('portal_charge_value', event.target.value)}
                                         disabled={processing}
                                     />
+                                    <p className="text-muted-foreground text-xs">
+                                        Fixed mode rule: this website charge is added to every payment, even for small amounts.
+                                    </p>
                                     <InputError message={errors.portal_charge_value} />
                                 </div>
                             </div>
@@ -126,11 +137,11 @@ export function ChargeSettingsForm({
                             <div>
                                 <h2 className="text-base font-semibold text-slate-950">Paystack gateway charge</h2>
                                 <p className="mt-1 text-sm text-slate-600">
-                                    These values are only for the payment gateway side. They let you recover the Paystack charge from students while keeping it separate from your own custom charge.
+                                    These values are only for the payment gateway side. They let you recover the Paystack charge from students while keeping it separate from your website charge. The extra flat fee applies once the payable amount reaches the configured threshold or more.
                                 </p>
                             </div>
 
-                            <div className="grid gap-6 md:grid-cols-2">
+                            <div className="grid gap-6 md:grid-cols-3">
                                 <div className="grid gap-2">
                                     <Label htmlFor="paystack_percentage_rate">Percentage rate (%)</Label>
                                     <Input
@@ -146,7 +157,7 @@ export function ChargeSettingsForm({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="paystack_flat_fee">Additional flat fee (NGN)</Label>
+                                    <Label htmlFor="paystack_flat_fee">Extra flat fee (NGN)</Label>
                                     <Input
                                         id="paystack_flat_fee"
                                         type="number"
@@ -160,7 +171,7 @@ export function ChargeSettingsForm({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="paystack_flat_fee_threshold">Flat-fee threshold (NGN)</Label>
+                                    <Label htmlFor="paystack_flat_fee_threshold">Flat fee waiver threshold (NGN)</Label>
                                     <Input
                                         id="paystack_flat_fee_threshold"
                                         type="number"
@@ -170,21 +181,10 @@ export function ChargeSettingsForm({
                                         onChange={(event) => setData('paystack_flat_fee_threshold', event.target.value)}
                                         disabled={processing}
                                     />
+                                    <p className="text-muted-foreground text-xs">
+                                        The extra flat fee is waived below this amount and added once the payable amount reaches this threshold or more.
+                                    </p>
                                     <InputError message={errors.paystack_flat_fee_threshold} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="paystack_charge_cap">Charge cap (NGN)</Label>
-                                    <Input
-                                        id="paystack_charge_cap"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={data.paystack_charge_cap}
-                                        onChange={(event) => setData('paystack_charge_cap', event.target.value)}
-                                        disabled={processing}
-                                    />
-                                    <InputError message={errors.paystack_charge_cap} />
                                 </div>
                             </div>
                         </section>
@@ -205,7 +205,7 @@ export function ChargeSettingsForm({
                         <CardDescription>These settings affect new or refreshed pending requests only.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
-                        <p>Students will see the base amount, your own charge, the Paystack gateway charge, and the final total before checkout.</p>
+                        <p>Students will see the base amount, your website service charge, the Paystack gateway charge, and the final total before checkout.</p>
                         <p>The charge breakdown is saved onto each payment request so later verification, receipts, and admin records stay consistent even if you update settings again.</p>
                         <p>Already-successful payments and issued receipts are not changed by future updates here.</p>
                         <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -232,7 +232,7 @@ export function ChargeSettingsForm({
                                 </div>
                                 <dl className="mt-3 space-y-2 text-sm text-slate-600">
                                     <div className="flex items-center justify-between gap-3">
-                                        <dt>Our own charge</dt>
+                                        <dt>Website service charge</dt>
                                         <dd className="font-medium text-slate-900">{currencyFormatter.format(Number(sample.portal_charge_amount))}</dd>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">

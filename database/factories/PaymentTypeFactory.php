@@ -22,6 +22,8 @@ class PaymentTypeFactory extends Factory
         return [
             'name' => fake()->unique()->words(2, true),
             'amount' => fake()->randomFloat(2, 1000, 50000),
+            'service_charge_amount' => null,
+            'paystack_charge_amount' => null,
             'description' => fake()->sentence(),
             'is_active' => true,
             'display_order' => fake()->optional()->numberBetween(1, 10),

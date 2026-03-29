@@ -78,6 +78,62 @@ class ReceiptService
         ]);
     }
 
+    public function signedDownloadUrl(Receipt $receipt): string
+    {
+        return URL::signedRoute('student-receipts.download', [
+            'receipt' => $receipt,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function payload(Receipt $receipt): array
+    {
+        $receipt->loadMissing('paymentRequest');
+
+        $paymentRequest = $receipt->paymentRequest;
+        $snapshot = is_array($receipt->snapshot) ? $receipt->snapshot : [];
+
+        return [
+            'public_reference' => $receipt->public_reference,
+            'receipt_number' => $receipt->receipt_number,
+            'issued_at' => $receipt->issued_at?->toIso8601String(),
+            'official_note' => $receipt->official_note,
+            'payment_request_public_reference' => (string) ($snapshot['payment_request_public_reference'] ?? $paymentRequest?->public_reference),
+            'payment_date' => $snapshot['payment_date'] ?? $paymentRequest?->paid_at?->toIso8601String(),
+            'full_name' => (string) ($snapshot['full_name'] ?? $paymentRequest?->full_name),
+            'matric_number' => (string) ($snapshot['matric_number'] ?? $paymentRequest?->matric_number),
+            'email' => (string) ($snapshot['email'] ?? $paymentRequest?->email),
+            'phone_number' => (string) ($snapshot['phone_number'] ?? $paymentRequest?->phone_number),
+            'department' => (string) ($snapshot['department'] ?? $paymentRequest?->department),
+            'faculty' => (string) ($snapshot['faculty'] ?? $paymentRequest?->faculty),
+            'program_type_name' => $snapshot['program_type_name'] ?? $paymentRequest?->program_type_name,
+            'graduation_session' => (string) ($snapshot['graduation_session'] ?? $paymentRequest?->graduation_session),
+            'payment_type_name' => (string) ($snapshot['payment_type_name'] ?? $paymentRequest?->payment_type_name),
+            'base_amount' => (string) ($snapshot['base_amount'] ?? $paymentRequest?->base_amount),
+            'portal_charge_amount' => (string) ($snapshot['portal_charge_amount'] ?? $paymentRequest?->portal_charge_amount),
+            'paystack_charge_amount' => (string) ($snapshot['paystack_charge_amount'] ?? $paymentRequest?->paystack_charge_amount),
+            'amount' => (string) ($snapshot['amount'] ?? $paymentRequest?->amount),
+            'payment_status' => (string) ($snapshot['payment_status'] ?? $paymentRequest?->payment_status->value),
+            'payment_status_label' => (string) ($snapshot['payment_status_label'] ?? $paymentRequest?->payment_status->label()),
+            'payment_reference' => $snapshot['payment_reference'] ?? $paymentRequest?->payment_reference,
+            'paystack_reference' => $snapshot['paystack_reference'] ?? $paymentRequest?->paystack_reference,
+            'payment_channel' => $snapshot['payment_channel'] ?? $paymentRequest?->payment_channel,
+            'transaction_reference' => $snapshot['transaction_reference'] ?? $paymentRequest?->transaction_reference,
+        ];
+    }
+
+    public function downloadFilename(Receipt $receipt): string
+    {
+        return 'GSU-Receipt-'.$receipt->receipt_number.'.pdf';
+    }
+
+    public function logoDataUri(): ?string
+    {
+        return $this->fileDataUri(public_path('images-removebg-preview.png'));
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -124,5 +180,21 @@ class ReceiptService
     protected function normalizeText(string $value): string
     {
         return preg_replace('/\s+/', ' ', trim($value)) ?? '';
+    }
+
+    protected function fileDataUri(string $path): ?string
+    {
+        if (! is_file($path) || ! is_readable($path)) {
+            return null;
+        }
+
+        $mimeType = mime_content_type($path) ?: 'image/png';
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            return null;
+        }
+
+        return sprintf('data:%s;base64,%s', $mimeType, base64_encode($contents));
     }
 }

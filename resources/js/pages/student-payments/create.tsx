@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import PortalLayout from '@/layouts/portal-layout';
 import { type SelectOption, type StudentDepartmentOption, type StudentPaymentTypeOption } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
-import { ArrowRight, CreditCard, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CreditCard } from 'lucide-react';
 import { type FormEventHandler } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('en-NG', {
@@ -70,23 +70,8 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
             <Head title="Student Payment Form" />
 
             <PortalLayout
-                eyebrow="Student Payment Form"
-                title="Prepare your GSU alumni payment request"
-                description="Enter your graduating student details, choose an approved payment type, and save your request before continuing to secure online payment."
                 aside={
                     <div className="grid gap-4">
-                        <Card className="border-emerald-100 bg-emerald-50/80">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-emerald-950">
-                                    <ShieldCheck className="size-5" />
-                                    Secure request preparation
-                                </CardTitle>
-                                <CardDescription className="text-emerald-800/80">
-                                    Amounts come directly from the approved admin payment types and cannot be changed from this form.
-                                </CardDescription>
-                            </CardHeader>
-                        </Card>
-
                         <Card className="border-slate-200 bg-white/90">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -109,26 +94,6 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
                                                 Total payable
                                             </p>
                                         </div>
-                                        <dl className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <dt>Base amount</dt>
-                                                <dd className="font-medium text-slate-900">
-                                                    {currencyFormatter.format(Number(selectedPaymentType.base_amount))}
-                                                </dd>
-                                            </div>
-                                            <div className="flex items-center justify-between gap-3">
-                                                <dt>Our own charge</dt>
-                                                <dd className="font-medium text-slate-900">
-                                                    {currencyFormatter.format(Number(selectedPaymentType.portal_charge_amount))}
-                                                </dd>
-                                            </div>
-                                            <div className="flex items-center justify-between gap-3">
-                                                <dt>Paystack gateway charge</dt>
-                                                <dd className="font-medium text-slate-900">
-                                                    {currencyFormatter.format(Number(selectedPaymentType.paystack_charge_amount))}
-                                                </dd>
-                                            </div>
-                                        </dl>
                                         <p className="text-sm leading-6 text-slate-600">
                                             {selectedPaymentType.description || 'No extra description has been provided for this payment type yet.'}
                                         </p>
@@ -370,22 +335,6 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
                                 <p className="text-sm font-medium text-slate-700">Total payable</p>
                                 <p className="mt-1 text-2xl font-semibold text-slate-950">
                                     {selectedPaymentType ? currencyFormatter.format(Number(selectedPaymentType.amount)) : 'Select a payment type'}
-                                </p>
-                                {selectedPaymentType ? (
-                                    <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
-                                        <p>
-                                            Base amount: <span className="font-medium text-slate-900">{currencyFormatter.format(Number(selectedPaymentType.base_amount))}</span>
-                                        </p>
-                                        <p>
-                                            Our own charge: <span className="font-medium text-slate-900">{currencyFormatter.format(Number(selectedPaymentType.portal_charge_amount))}</span>
-                                        </p>
-                                        <p>
-                                            Paystack gateway charge: <span className="font-medium text-slate-900">{currencyFormatter.format(Number(selectedPaymentType.paystack_charge_amount))}</span>
-                                        </p>
-                                    </div>
-                                ) : null}
-                                <p className="mt-2 text-sm leading-6 text-slate-600">
-                                    The total is controlled by the selected payment type and the current approved charge settings, so it cannot be edited manually.
                                 </p>
                             </div>
 

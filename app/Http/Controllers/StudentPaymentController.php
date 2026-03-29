@@ -8,10 +8,10 @@ use App\Models\Faculty;
 use App\Models\PaymentRequest;
 use App\Models\PaymentType;
 use App\Models\ProgramType;
-use App\Services\ChargeSettingService;
-use App\Services\PaymentChargeCalculator;
+use App\Services\PaymentTypeChargeService;
 use App\Services\PaymentRequestService;
 use App\Support\GraduationSessionOptions;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,15 +20,12 @@ class StudentPaymentController extends Controller
 {
     public function __construct(
         protected PaymentRequestService $paymentRequestService,
-        protected PaymentChargeCalculator $paymentChargeCalculator,
-        protected ChargeSettingService $chargeSettingService,
+        protected PaymentTypeChargeService $paymentTypeChargeService,
     ) {
     }
 
     public function create(): Response
     {
-        $chargeSetting = $this->chargeSettingService->current();
-
         return Inertia::render('student-payments/create', [
             'faculties' => Faculty::query()
                 ->active()
@@ -72,18 +69,15 @@ class StudentPaymentController extends Controller
                 ->active()
                 ->ordered()
                 ->get()
-                ->map(function (PaymentType $paymentType) use ($chargeSetting): array {
-                    $chargeBreakdown = $this->paymentChargeCalculator->calculateForBaseAmount(
-                        (string) $paymentType->amount,
-                        $chargeSetting,
-                    );
+                ->map(function (PaymentType $paymentType): array {
+                    $chargeBreakdown = $this->paymentTypeChargeService->resolveForPaymentType($paymentType);
 
                     return [
                         'id' => $paymentType->id,
                         'name' => $paymentType->name,
                         'amount' => $chargeBreakdown['total_amount'],
                         'base_amount' => $chargeBreakdown['base_amount'],
-                        'portal_charge_amount' => $chargeBreakdown['portal_charge_amount'],
+                        'portal_charge_amount' => $chargeBreakdown['service_charge_amount'],
                         'paystack_charge_amount' => $chargeBreakdown['paystack_charge_amount'],
                         'description' => $paymentType->description,
                         'program_type_ids' => $paymentType->programTypes
@@ -103,15 +97,15 @@ class StudentPaymentController extends Controller
         $reused = $result['reused'];
 
         return to_route('student-payments.show', $paymentRequest)
-            ->with(
-                'success',
-                $reused
+            ->with([
+                'success' => $reused
                     ? 'An existing pending request was found and updated for you.'
                     : 'Your payment request has been created and is ready for payment initialization.',
-            );
+                'auto_open_checkout' => true,
+            ]);
     }
 
-    public function show(PaymentRequest $paymentRequest): Response
+    public function show(Request $request, PaymentRequest $paymentRequest): Response
     {
         return Inertia::render('student-payments/show', [
             'paymentRequest' => [
@@ -144,6 +138,7 @@ class StudentPaymentController extends Controller
             ],
             'paymentGatewayReady' => filled(config('services.paystack.secret_key'))
                 && filled(config('services.paystack.public_key')),
+            'autoOpenCheckout' => (bool) $request->session()->get('auto_open_checkout', false),
         ]);
     }
 }

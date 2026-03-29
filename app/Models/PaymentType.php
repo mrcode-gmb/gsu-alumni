@@ -21,6 +21,8 @@ class PaymentType extends Model
     protected $fillable = [
         'name',
         'amount',
+        'service_charge_amount',
+        'paystack_charge_amount',
         'description',
         'is_active',
         'display_order',
@@ -35,6 +37,8 @@ class PaymentType extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'service_charge_amount' => 'decimal:2',
+            'paystack_charge_amount' => 'decimal:2',
             'is_active' => 'boolean',
             'display_order' => 'integer',
         ];

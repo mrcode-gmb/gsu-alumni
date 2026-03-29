@@ -26,6 +26,8 @@ function formatDateTime(value: string | null): string {
 }
 
 export function ReceiptDocument({ receipt }: { receipt: StudentReceipt }) {
+    const transactionCharges = Number(receipt.portal_charge_amount) + Number(receipt.paystack_charge_amount);
+
     return (
         <article className="receipt-document relative overflow-hidden rounded-[1.5rem] border-2 border-slate-300 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -117,15 +119,9 @@ export function ReceiptDocument({ receipt }: { receipt: StudentReceipt }) {
                                     </td>
                                 </tr>
                                 <tr className="border-b border-slate-300">
-                                    <td className="px-4 py-3 font-medium text-slate-800">Our own charge</td>
+                                    <td className="px-4 py-3 font-medium text-slate-800">Transaction charges</td>
                                     <td className="px-4 py-3 text-right font-semibold text-slate-950">
-                                        {currencyFormatter.format(Number(receipt.portal_charge_amount))}
-                                    </td>
-                                </tr>
-                                <tr className="border-b border-slate-300">
-                                    <td className="px-4 py-3 font-medium text-slate-800">Paystack gateway charge</td>
-                                    <td className="px-4 py-3 text-right font-semibold text-slate-950">
-                                        {currencyFormatter.format(Number(receipt.paystack_charge_amount))}
+                                        {currencyFormatter.format(transactionCharges)}
                                     </td>
                                 </tr>
                                 <tr>

@@ -47,7 +47,6 @@ class PaymentChargeCalculator
                     'percentage_rate' => number_format((float) $chargeSetting->paystack_percentage_rate, 4, '.', ''),
                     'flat_fee' => (string) $chargeSetting->paystack_flat_fee,
                     'flat_fee_threshold' => (string) $chargeSetting->paystack_flat_fee_threshold,
-                    'charge_cap' => (string) $chargeSetting->paystack_charge_cap,
                     'amount' => $this->fromKobo($paystackChargeKobo),
                 ],
                 'calculated_at' => now()->toIso8601String(),
@@ -96,7 +95,6 @@ class PaymentChargeCalculator
         $percentageRate = max(0, (float) $chargeSetting->paystack_percentage_rate);
         $flatFeeKobo = $this->toKobo((string) $chargeSetting->paystack_flat_fee);
         $thresholdKobo = $this->toKobo((string) $chargeSetting->paystack_flat_fee_threshold);
-        $capKobo = $this->toKobo((string) $chargeSetting->paystack_charge_cap);
 
         $feeKobo = $percentageRate > 0
             ? (int) ceil($grossAmountKobo * ($percentageRate / 100))
@@ -104,10 +102,6 @@ class PaymentChargeCalculator
 
         if ($flatFeeKobo > 0 && $grossAmountKobo >= $thresholdKobo) {
             $feeKobo += $flatFeeKobo;
-        }
-
-        if ($capKobo > 0) {
-            $feeKobo = min($feeKobo, $capKobo);
         }
 
         return max(0, $feeKobo);

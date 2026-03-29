@@ -21,7 +21,7 @@ import {
     type SharedData,
 } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CalendarRange, Eye, FileSpreadsheet, Printer, ReceiptText, RotateCcw, Search } from 'lucide-react';
+import { CalendarRange, Download, Eye, FileSpreadsheet, Printer, ReceiptText, RotateCcw, Search } from 'lucide-react';
 import { type FormEvent, useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -101,6 +101,10 @@ export default function PaymentRecordIndex({
         () => route('admin.payment-records.print', cleanFilters(form)),
         [form],
     );
+    const pdfUrl = useMemo(
+        () => route('admin.payment-records.download-pdf', cleanFilters(form)),
+        [form],
+    );
 
     const noResults = paymentRecords.data.length === 0;
 
@@ -116,6 +120,13 @@ export default function PaymentRecordIndex({
                     />
 
                     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                        <Button className="w-full sm:w-auto" asChild>
+                            <a href={pdfUrl}>
+                                <Download />
+                                Download PDF report
+                            </a>
+                        </Button>
+
                         <Button className="w-full sm:w-auto" variant="outline" asChild>
                             <a href={printUrl} target="_blank" rel="noreferrer">
                                 <Printer />

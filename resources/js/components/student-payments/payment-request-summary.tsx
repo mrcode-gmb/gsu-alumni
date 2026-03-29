@@ -19,6 +19,8 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 }
 
 export function PaymentRequestSummary({ paymentRequest }: { paymentRequest: StudentPaymentRequest }) {
+    const transactionCharges = Number(paymentRequest.portal_charge_amount) + Number(paymentRequest.paystack_charge_amount);
+
     return (
         <Card className="border-slate-200 bg-white/95 shadow-sm">
             <CardHeader>
@@ -55,9 +57,7 @@ export function PaymentRequestSummary({ paymentRequest }: { paymentRequest: Stud
                     <Separator />
                     <SummaryRow label="Base amount" value={currencyFormatter.format(Number(paymentRequest.base_amount))} />
                     <Separator />
-                    <SummaryRow label="Our own charge" value={currencyFormatter.format(Number(paymentRequest.portal_charge_amount))} />
-                    <Separator />
-                    <SummaryRow label="Paystack gateway charge" value={currencyFormatter.format(Number(paymentRequest.paystack_charge_amount))} />
+                    <SummaryRow label="Transaction charges" value={currencyFormatter.format(transactionCharges)} />
                     <Separator />
                     <SummaryRow label="Total payable" value={currencyFormatter.format(Number(paymentRequest.amount))} />
                     {paymentRequest.payment_reference && (
