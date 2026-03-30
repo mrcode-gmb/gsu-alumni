@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="color-scheme" content="light dark">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
@@ -24,10 +25,12 @@
         <style>
             html {
                 background-color: oklch(1 0 0);
+                color-scheme: light;
             }
 
             html.dark {
                 background-color: oklch(0.145 0 0);
+                color-scheme: dark;
             }
         </style>
 
