@@ -75,15 +75,9 @@ class StudentPaymentCheckoutController extends Controller
             : redirect()->away($authorizationUrl);
     }
 
-    public function callback(Request $request): RedirectResponse
+    public function callback(Request $request)
     {
         $reference = trim((string) ($request->query('reference') ?? $request->query('trxref') ?? ''));
-
-        Log::info('Paystack callback received.', [
-            'reference' => $reference,
-            'query' => $request->query(),
-        ]);
-
         try {
             $result = $this->paymentCheckoutService->verifyPaymentByReference($reference);
         } catch (DomainException|RuntimeException $exception) {
@@ -122,12 +116,6 @@ class StudentPaymentCheckoutController extends Controller
 
     public function verify(PaymentRequest $paymentRequest): RedirectResponse
     {
-        Log::info('Manual Paystack verification requested.', [
-            'payment_request_id' => $paymentRequest->id,
-            'payment_reference' => $paymentRequest->payment_reference,
-            'paystack_reference' => $paymentRequest->paystack_reference,
-        ]);
-
         try {
             $result = $this->paymentCheckoutService->verifyExistingPaymentRequest($paymentRequest);
         } catch (DomainException|RuntimeException $exception) {

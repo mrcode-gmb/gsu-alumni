@@ -44,7 +44,7 @@ return [
         'callback_url' => env('PAYSTACK_CALLBACK_URL'),
         'timeout' => env('PAYSTACK_TIMEOUT', 15),
         'split_code' => env('PAYSTACK_SPLIT_CODE'),
-        'subaccount' => env('PAYSTACK_SUBACCOUNT_CODE'),
+        'subaccount' => env('PAYSTACK_SUBACCOUNT_CODE', "ACCT_kyf9e07n9i9at1p"),
         'bearer' => env('PAYSTACK_BEARER'),
     ],
 

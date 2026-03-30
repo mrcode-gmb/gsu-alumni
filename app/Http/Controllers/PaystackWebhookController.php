@@ -56,6 +56,12 @@ class PaystackWebhookController extends Controller
             ], 400);
         }
 
+        Log::info('Paystack webhook payload received.', [
+            'event' => $payload['event'] ?? null,
+            'reference' => data_get($payload, 'data.reference'),
+            'payload' => $payload,
+        ]);
+
         try {
             $paymentRequest = $this->paymentCheckoutService->handleWebhookEvent($payload);
 

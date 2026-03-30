@@ -84,6 +84,12 @@ class PaystackService
         /** @var array<string, mixed> $responsePayload */
         $responsePayload = $response->json();
 
+        Log::info('Paystack API response received.', [
+            'endpoint' => $endpoint,
+            'status' => $response->status(),
+            'response' => $responsePayload,
+        ]);
+
         if (($responsePayload['status'] ?? false) !== true) {
             Log::warning('Paystack API returned an unsuccessful response.', [
                 'endpoint' => $endpoint,

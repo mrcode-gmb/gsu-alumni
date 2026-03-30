@@ -45,8 +45,17 @@ class PaymentCheckoutService
             'metadata' => $this->checkoutMetadata($paymentRequest),
         ];
 
+        $payload = $this->applySplitConfig($payload, $paymentRequest);
+
         $response = $this->paystackService->initializeTransaction($payload);
         $data = $response['data'] ?? [];
+
+        Log::info('Paystack initialize response stored.', [
+            'payment_request_id' => $paymentRequest->id,
+            'payment_reference' => $paymentRequest->payment_reference,
+            'paystack_reference' => $paymentRequest->paystack_reference,
+            'response' => $response,
+        ]);
 
         $paymentRequest->forceFill([
             'gateway_response' => (string) ($response['message'] ?? 'Authorization URL created'),
@@ -99,6 +108,8 @@ class PaymentCheckoutService
             'metadata' => $this->checkoutMetadata($paymentRequest),
         ];
 
+        $checkout = $this->applySplitConfig($checkout, $paymentRequest);
+
         $paymentRequest->forceFill([
             'gateway_response' => 'Popup checkout prepared.',
             'initialization_payload' => [
@@ -111,9 +122,20 @@ class PaymentCheckoutService
                     'reference' => $checkout['reference'],
                     'callback_url' => $checkout['callback_url'],
                     'metadata' => $checkout['metadata'],
+                    'split_code' => $checkout['split_code'] ?? null,
+                    'subaccount' => $checkout['subaccount'] ?? null,
+                    'transaction_charge' => $checkout['transaction_charge'] ?? null,
+                    'bearer' => $checkout['bearer'] ?? null,
                 ],
             ],
         ])->save();
+
+        Log::info('Paystack popup checkout prepared.', [
+            'payment_request_id' => $paymentRequest->id,
+            'payment_reference' => $paymentRequest->payment_reference,
+            'paystack_reference' => $paymentRequest->paystack_reference,
+            'checkout' => $checkout,
+        ]);
 
         return [
             'paymentRequest' => $paymentRequest->refresh(),
@@ -192,6 +214,12 @@ class PaymentCheckoutService
 
             $response = $this->paystackService->verifyTransaction($reference);
             $data = $response['data'] ?? [];
+
+            Log::info('Paystack verify response received.', [
+                'payment_request_id' => $paymentRequest->id,
+                'reference' => $reference,
+                'response' => $response,
+            ]);
 
             $this->guardVerifiedPayloadIntegrity($paymentRequest, $reference, $data);
 
@@ -399,6 +427,36 @@ class PaymentCheckoutService
     protected function amountInSubunit(string $amount): int
     {
         return (int) str_replace('.', '', number_format((float) $amount, 2, '.', ''));
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    protected function applySplitConfig(array $payload, PaymentRequest $paymentRequest): array
+    {
+        $splitCode = trim((string) config('services.paystack.split_code', ''));
+        $subaccount = trim((string) config('services.paystack.subaccount', ''));
+        $bearer = trim((string) config('services.paystack.bearer', ''));
+        if ($splitCode !== '') {
+            $payload['split_code'] = $splitCode;
+        } elseif ($subaccount !== '') {
+            $payload['subaccount'] = $subaccount;
+
+            $total = (float) $paymentRequest->amount;
+            $subaccountAmount = (float) $paymentRequest->base_amount;
+            $transactionCharge = max($total - $subaccountAmount, 0);
+
+            if ($transactionCharge > 0) {
+                $payload['transaction_charge'] = $this->amountInSubunit((string) $transactionCharge);
+            }
+
+            if ($bearer !== '') {
+                $payload['bearer'] = $bearer;
+            }
+        }
+
+        return $payload;
     }
 
     protected function normalizeGatewayStatus(string $gatewayStatus): PaymentRequestStatus

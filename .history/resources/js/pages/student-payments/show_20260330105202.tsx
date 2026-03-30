@@ -101,7 +101,7 @@ async function preparePopupCheckout(publicReference: string) {
             callback_url?: string;
             metadata?: Record<string, unknown>;
             split_code?: string | null;
-            subaccount?: string | null;
+            subaccount?: string | "ACCT_kyf9e07n9i9at1p";
             transaction_charge?: number | null;
             bearer?: 'account' | 'subaccount' | null;
         };
@@ -218,15 +218,7 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
                 });
             } catch (popupError: unknown) {
                 console.error('Paystack popup launch error', popupError);
-                const errorMessage = popupError instanceof Error ? popupError.message : String(popupError ?? '');
-                const issues = (popupError as { issues?: Array<{ message?: string } | string> })?.issues;
-                const issuesMessage = Array.isArray(issues)
-                    ? issues
-                          .map((issue) => (typeof issue === 'string' ? issue : issue?.message))
-                          .filter(Boolean)
-                          .join(', ')
-                    : '';
-                const message = [errorMessage, issuesMessage].filter(Boolean).join(' - ');
+                const message = popupError instanceof Error ? popupError.message : String(popupError ?? '');
                 throw new Error(message || 'Paystack checkout could not start in this browser.');
             }
         } catch (error: unknown) {

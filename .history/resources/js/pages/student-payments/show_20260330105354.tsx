@@ -126,7 +126,7 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
 
     const isSuccessful = paymentRequest.payment_status === 'successful';
     const isPending = paymentRequest.payment_status === 'pending';
-    const isFailed = paymentRequest.payment_status === 'failed';
+    const isFailed: = paymentRequest.payment_status === 'failed';
     const isAbandoned = paymentRequest.payment_status === 'abandoned';
     const successMessage = !isPending ? flash.success : null;
     const hasPreviousSuccessfulPayments = paymentRequest.previous_successful_payments_count > 0;
@@ -218,15 +218,7 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
                 });
             } catch (popupError: unknown) {
                 console.error('Paystack popup launch error', popupError);
-                const errorMessage = popupError instanceof Error ? popupError.message : String(popupError ?? '');
-                const issues = (popupError as { issues?: Array<{ message?: string } | string> })?.issues;
-                const issuesMessage = Array.isArray(issues)
-                    ? issues
-                          .map((issue) => (typeof issue === 'string' ? issue : issue?.message))
-                          .filter(Boolean)
-                          .join(', ')
-                    : '';
-                const message = [errorMessage, issuesMessage].filter(Boolean).join(' - ');
+                const message = popupError instanceof Error ? popupError.message : String(popupError ?? '');
                 throw new Error(message || 'Paystack checkout could not start in this browser.');
             }
         } catch (error: unknown) {
