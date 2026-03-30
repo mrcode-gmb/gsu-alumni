@@ -18,6 +18,11 @@ export function AppSidebar() {
         ...(auth.user.role === 'cashier'
             ? [
                   {
+                      title: 'Payment Records',
+                      href: route('cashier.payment-records.index'),
+                      icon: FileText,
+                  },
+                  {
                       title: 'Receipt Verification',
                       href: route('cashier.receipts.verify'),
                       icon: ShieldCheck,

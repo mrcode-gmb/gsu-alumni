@@ -23,10 +23,11 @@ const currencyFormatter = new Intl.NumberFormat('en-NG', {
 
 interface DashboardProps {
     adminSummary: AdminPaymentDashboardSummary | null;
+    cashierSummary: AdminPaymentDashboardSummary | null;
     recentPaymentRecords: AdminRecentPaymentRecord[];
 }
 
-export default function Dashboard({ adminSummary, recentPaymentRecords }: DashboardProps) {
+export default function Dashboard({ adminSummary, cashierSummary, recentPaymentRecords }: DashboardProps) {
     const { auth } = usePage<SharedData>().props;
     const isAdmin = auth.user.role === 'alumni_admin' || auth.user.role === 'super_admin';
     const isCashier = auth.user.role === 'cashier';
@@ -207,20 +208,27 @@ export default function Dashboard({ adminSummary, recentPaymentRecords }: Dashbo
                         </Card>
                     </div>
                 ) : isCashier ? (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Receipt verification desk</CardTitle>
-                            <CardDescription>Confirm member payments before certificate collection.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Button asChild>
-                                <Link href={route('cashier.receipts.verify')}>
-                                    Verify receipts
-                                    <ArrowRight />
-                                </Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
+                    <div className="space-y-6">
+                        {cashierSummary && <PaymentRecordSummaryCards summary={cashierSummary} variant="cashier" />}
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Receipt verification desk</CardTitle>
+                                <CardDescription>Confirm member payments before certificate collection.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-muted-foreground text-sm">
+                                    Start a quick lookup by matric number and confirm the verified receipt details.
+                                </p>
+                                <Button className="w-full sm:w-auto" asChild>
+                                    <Link href={route('cashier.receipts.verify')}>
+                                        Verify receipts
+                                        <ArrowRight />
+                                    </Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
                 ) : (
                     <Card>
                         <CardHeader>

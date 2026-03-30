@@ -19,14 +19,24 @@ class DashboardController extends Controller
         $user = request()->user();
 
         if (! $user?->isAdmin()) {
+            if ($user?->isCashier()) {
+                return Inertia::render('dashboard', [
+                    'adminSummary' => null,
+                    'cashierSummary' => $this->adminPaymentRecordService->cashierDashboardSummary(),
+                    'recentPaymentRecords' => [],
+                ]);
+            }
+
             return Inertia::render('dashboard', [
                 'adminSummary' => null,
+                'cashierSummary' => null,
                 'recentPaymentRecords' => [],
             ]);
         }
 
         return Inertia::render('dashboard', [
             'adminSummary' => $this->adminPaymentRecordService->dashboardSummary(),
+            'cashierSummary' => null,
             'recentPaymentRecords' => $this->adminPaymentRecordService
                 ->recentRecords()
                 ->map(fn (PaymentRequest $paymentRequest): array => $this->dashboardRecordPayload($paymentRequest))

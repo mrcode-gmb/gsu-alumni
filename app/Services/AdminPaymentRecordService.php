@@ -85,6 +85,40 @@ class AdminPaymentRecordService
     }
 
     /**
+     * @return array<string, int|string>
+     */
+    public function cashierDashboardSummary(): array
+    {
+        $summary = PaymentRequest::query()
+            ->selectRaw('COUNT(*) as total_payment_requests')
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_successful_payments',
+                [PaymentRequestStatus::Successful->value],
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_pending_payments',
+                [PaymentRequestStatus::Pending->value],
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_failed_payments',
+                [PaymentRequestStatus::Failed->value],
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN payment_status = ? THEN base_amount ELSE 0 END), 0) as total_amount_collected',
+                [PaymentRequestStatus::Successful->value],
+            )
+            ->first();
+
+        return [
+            'total_payment_requests' => (int) ($summary?->total_payment_requests ?? 0),
+            'total_successful_payments' => (int) ($summary?->total_successful_payments ?? 0),
+            'total_pending_payments' => (int) ($summary?->total_pending_payments ?? 0),
+            'total_failed_payments' => (int) ($summary?->total_failed_payments ?? 0),
+            'total_amount_collected' => number_format((float) ($summary?->total_amount_collected ?? 0), 2, '.', ''),
+        ];
+    }
+
+    /**
      * @param  array<string, string>  $filters
      * @return array<string, int|string>
      */

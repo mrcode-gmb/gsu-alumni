@@ -19,10 +19,29 @@ const summaryItems: Array<{
     { key: 'total_amount_collected', label: 'Amount collected', isCurrency: true },
 ];
 
-export function PaymentRecordSummaryCards({ summary }: { summary: AdminPaymentDashboardSummary }) {
+const cashierSummaryItems: Array<{
+    key: keyof AdminPaymentDashboardSummary;
+    label: string;
+    isCurrency?: boolean;
+}> = [
+    { key: 'total_payment_requests', label: 'Total payment requests' },
+    { key: 'total_successful_payments', label: 'Verified payments' },
+    { key: 'total_pending_payments', label: 'Pending payments' },
+    { key: 'total_amount_collected', label: 'Amount collected (base fees)', isCurrency: true },
+];
+
+export function PaymentRecordSummaryCards({
+    summary,
+    variant = 'admin',
+}: {
+    summary: AdminPaymentDashboardSummary;
+    variant?: 'admin' | 'cashier';
+}) {
+    const items = variant === 'cashier' ? cashierSummaryItems : summaryItems;
+
     return (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {summaryItems.map((item) => (
+        <div className={`grid gap-4 md:grid-cols-2 ${variant === 'cashier' ? 'xl:grid-cols-4' : 'xl:grid-cols-5'}`}>
+            {items.map((item) => (
                 <Card key={item.key}>
                     <CardHeader className="gap-1">
                         <CardDescription>{item.label}</CardDescription>
