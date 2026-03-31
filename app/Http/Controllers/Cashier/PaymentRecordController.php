@@ -31,6 +31,9 @@ class PaymentRecordController extends Controller
         $statusFilter = trim((string) $request->query('status', ''));
         $allowedStatuses = collect(PaymentRequestStatus::cases())->map(fn (PaymentRequestStatus $status): string => $status->value)->all();
         $statusFilter = in_array($statusFilter, $allowedStatuses, true) ? $statusFilter : '';
+        $perPageInput = (string) $request->query('per_page', '20');
+        $allowedPerPage = ['20', '50', '100', '200', '500', 'all'];
+        $perPageInput = in_array($perPageInput, $allowedPerPage, true) ? $perPageInput : '20';
 
         $query = PaymentRequest::query()
             ->with(['receipt:id,payment_request_id,receipt_number'])
@@ -53,7 +56,14 @@ class PaymentRecordController extends Controller
             $query->where('payment_status', $statusFilter);
         }
 
-        $paymentRecords = $query->paginate(20)->withQueryString();
+        if ($perPageInput === 'all') {
+            $total = (clone $query)->count();
+            $perPage = max($total, 1);
+        } else {
+            $perPage = (int) $perPageInput;
+        }
+
+        $paymentRecords = $query->paginate($perPage)->withQueryString();
         $paymentRecords->setCollection(
             $paymentRecords->getCollection()->map(
                 fn (PaymentRequest $paymentRequest): array => $this->paymentRecordListPayload($paymentRequest),
@@ -66,6 +76,7 @@ class PaymentRecordController extends Controller
             'filters' => [
                 'search' => $search,
                 'status' => $statusFilter,
+                'per_page' => $perPageInput,
             ],
         ]);
     }
@@ -136,6 +147,7 @@ class PaymentRecordController extends Controller
             'recorded_at' => $recordedAt?->toIso8601String(),
             'is_successful' => $paymentRequest->payment_status === PaymentRequestStatus::Successful,
             'can_recheck' => $paymentRequest->payment_status === PaymentRequestStatus::Pending
+                && $paymentRequest->initialization_payload !== null
                 && ($paymentRequest->paystack_reference !== null || $paymentRequest->payment_reference !== null),
             'can_open_receipt' => $paymentRequest->payment_status === PaymentRequestStatus::Successful,
         ];

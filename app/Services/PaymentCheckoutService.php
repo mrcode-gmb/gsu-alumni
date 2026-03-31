@@ -36,10 +36,13 @@ class PaymentCheckoutService
             ];
         }
 
+        $paymentReference = $paymentRequest->payment_reference ?? $this->generateInternalReference();
+        $paystackReference = $paymentRequest->paystack_reference ?? $this->generateGatewayReference($paymentReference);
+
         $payload = [
             'email' => $paymentRequest->email,
             'amount' => $this->amountInSubunit($paymentRequest->amount),
-            'reference' => $paymentRequest->paystack_reference,
+            'reference' => $paystackReference,
             'currency' => (string) config('services.paystack.currency', 'NGN'),
             'callback_url' => $this->callbackUrl(),
             'metadata' => $this->checkoutMetadata($paymentRequest),
@@ -52,12 +55,14 @@ class PaymentCheckoutService
 
         Log::info('Paystack initialize response stored.', [
             'payment_request_id' => $paymentRequest->id,
-            'payment_reference' => $paymentRequest->payment_reference,
-            'paystack_reference' => $paymentRequest->paystack_reference,
+            'payment_reference' => $paymentReference,
+            'paystack_reference' => $paystackReference,
             'response' => $response,
         ]);
 
         $paymentRequest->forceFill([
+            'payment_reference' => $paymentReference,
+            'paystack_reference' => $paystackReference,
             'gateway_response' => (string) ($response['message'] ?? 'Authorization URL created'),
             'transaction_reference' => (string) ($data['access_code'] ?? ''),
             'initialization_payload' => $response,
@@ -65,8 +70,8 @@ class PaymentCheckoutService
 
         Log::info('Paystack transaction initialized.', [
             'payment_request_id' => $paymentRequest->id,
-            'payment_reference' => $paymentRequest->payment_reference,
-            'paystack_reference' => $paymentRequest->paystack_reference,
+            'payment_reference' => $paymentReference,
+            'paystack_reference' => $paystackReference,
         ]);
 
         return [
@@ -98,12 +103,15 @@ class PaymentCheckoutService
             throw new RuntimeException('Paystack public key is not configured yet.');
         }
 
+        $paymentReference = $paymentRequest->payment_reference ?? $this->generateInternalReference();
+        $paystackReference = $paymentRequest->paystack_reference ?? $this->generateGatewayReference($paymentReference);
+
         $checkout = [
             'key' => $publicKey,
             'email' => $paymentRequest->email,
             'amount' => $this->amountInSubunit($paymentRequest->amount),
             'currency' => (string) config('services.paystack.currency', 'NGN'),
-            'reference' => (string) $paymentRequest->paystack_reference,
+            'reference' => $paystackReference,
             'callback_url' => $this->callbackUrl(),
             'metadata' => $this->checkoutMetadata($paymentRequest),
         ];
@@ -111,6 +119,8 @@ class PaymentCheckoutService
         $checkout = $this->applySplitConfig($checkout, $paymentRequest);
 
         $paymentRequest->forceFill([
+            'payment_reference' => $paymentReference,
+            'paystack_reference' => $paystackReference,
             'gateway_response' => 'Popup checkout prepared.',
             'initialization_payload' => [
                 'mode' => 'popup',
@@ -132,8 +142,8 @@ class PaymentCheckoutService
 
         Log::info('Paystack popup checkout prepared.', [
             'payment_request_id' => $paymentRequest->id,
-            'payment_reference' => $paymentRequest->payment_reference,
-            'paystack_reference' => $paymentRequest->paystack_reference,
+            'payment_reference' => $paymentReference,
+            'paystack_reference' => $paystackReference,
             'checkout' => $checkout,
         ]);
 
@@ -238,6 +248,10 @@ class PaymentCheckoutService
      */
     public function verifyExistingPaymentRequest(PaymentRequest $paymentRequest): array
     {
+        if ($paymentRequest->initialization_payload === null) {
+            throw new DomainException('This payment request has not been initialized with Paystack yet.');
+        }
+
         $reference = $paymentRequest->paystack_reference ?? $paymentRequest->payment_reference;
 
         if ($reference === null) {
@@ -432,16 +446,6 @@ class PaymentCheckoutService
 
         if (! $paymentType instanceof PaymentType || ! $paymentType->is_active) {
             throw new DomainException('This payment request can no longer be paid because the selected payment type is not active.');
-        }
-
-        if ($paymentRequest->payment_reference === null) {
-            $paymentRequest->payment_reference = $this->generateInternalReference();
-            $paymentRequest->save();
-        }
-
-        if ($paymentRequest->paystack_reference === null) {
-            $paymentRequest->paystack_reference = $this->generateGatewayReference($paymentRequest->payment_reference);
-            $paymentRequest->save();
         }
 
         return $paymentRequest;

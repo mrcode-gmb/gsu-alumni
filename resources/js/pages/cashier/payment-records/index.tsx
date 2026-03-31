@@ -50,6 +50,7 @@ interface CashierPaymentRecordIndexProps {
     filters: {
         search: string;
         status: string;
+        per_page: string;
     };
 }
 
@@ -68,13 +69,14 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
     const { flash } = usePage().props as { flash: { success?: string; error?: string } };
     const [search, setSearch] = useState(filters.search ?? '');
     const [status, setStatus] = useState(filters.status ?? '');
+    const [perPage, setPerPage] = useState(filters.per_page ?? '20');
     const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
     const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         router.get(
             route('cashier.payment-records.index'),
-            { search: search.trim(), status: status || undefined },
+            { search: search.trim(), status: status || undefined, per_page: perPage || undefined },
             { preserveScroll: true, preserveState: true },
         );
     };
@@ -157,11 +159,27 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <div className="grid gap-2 sm:min-w-[160px]">
+                                <Label htmlFor="cashier-per-page">Per page</Label>
+                                <Select value={perPage} onValueChange={(value) => setPerPage(value)}>
+                                    <SelectTrigger id="cashier-per-page">
+                                        <SelectValue placeholder="20" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="20">20</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                        <SelectItem value="200">200</SelectItem>
+                                        <SelectItem value="500">500</SelectItem>
+                                        <SelectItem value="all">All</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <Button type="submit" className="w-full sm:w-auto">
                                 <Search />
                                 Search
                             </Button>
-                            {(search || status) && (
+                            {(search || status || perPage !== '20') && (
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -169,6 +187,7 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                     onClick={() => {
                                         setSearch('');
                                         setStatus('');
+                                        setPerPage('20');
                                         router.get(route('cashier.payment-records.index'));
                                     }}
                                 >

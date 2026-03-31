@@ -11,17 +11,20 @@ use App\Models\PaymentType;
 use App\Models\ProgramType;
 use App\Services\PaymentTypeChargeService;
 use App\Services\PaymentRequestService;
+use App\Services\PaymentCheckoutService;
 use App\Support\GraduationSessionOptions;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class StudentPaymentController extends Controller
 {
     public function __construct(
         protected PaymentRequestService $paymentRequestService,
         protected PaymentTypeChargeService $paymentTypeChargeService,
+        protected PaymentCheckoutService $paymentCheckoutService,
     ) {
     }
 
@@ -96,6 +99,16 @@ class StudentPaymentController extends Controller
         $result = $this->paymentRequestService->createOrReusePending($request->validated());
         $paymentRequest = $result['paymentRequest'];
         $reused = $result['reused'];
+
+        try {
+            $this->paymentCheckoutService->preparePopupPayment($paymentRequest);
+        } catch (Throwable $exception) {
+            if ($paymentRequest->initialization_payload === null) {
+                $paymentRequest->delete();
+            }
+
+            return back()->with('error', 'We could not initialize Paystack for this payment. Please try again.');
+        }
 
         $request->session()->put($this->accessSessionKey($paymentRequest), true);
 
