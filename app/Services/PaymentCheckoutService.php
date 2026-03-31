@@ -289,12 +289,29 @@ class PaymentCheckoutService
         $expectedCurrency = strtoupper((string) config('services.paystack.currency', 'NGN'));
         $verifiedEmail = strtolower((string) data_get($verifiedData, 'customer.email', ''));
         $expectedEmail = strtolower($paymentRequest->email);
+        $verifiedRequestId = data_get($verifiedData, 'metadata.payment_request_id');
+        $verifiedPublicReference = (string) data_get($verifiedData, 'metadata.public_reference', '');
+        $verifiedPaymentTypeId = data_get($verifiedData, 'metadata.payment_type_id');
+        $metadataMismatch = false;
+
+        if ($verifiedRequestId !== null && (int) $verifiedRequestId !== (int) $paymentRequest->id) {
+            $metadataMismatch = true;
+        }
+
+        if ($verifiedPublicReference !== '' && $verifiedPublicReference !== $paymentRequest->public_reference) {
+            $metadataMismatch = true;
+        }
+
+        if ($verifiedPaymentTypeId !== null && (int) $verifiedPaymentTypeId !== (int) $paymentRequest->payment_type_id) {
+            $metadataMismatch = true;
+        }
 
         if (
             $verifiedReference !== $reference
             || $verifiedAmount !== $expectedAmount
             || $verifiedCurrency !== $expectedCurrency
             || $verifiedEmail !== $expectedEmail
+            || $metadataMismatch
         ) {
             Log::warning('Paystack verification payload failed integrity checks.', [
                 'payment_request_id' => $paymentRequest->id,
@@ -306,6 +323,12 @@ class PaymentCheckoutService
                 'verified_currency' => $verifiedCurrency,
                 'expected_email' => $expectedEmail,
                 'verified_email' => $verifiedEmail,
+                'expected_request_id' => $paymentRequest->id,
+                'verified_request_id' => $verifiedRequestId,
+                'expected_public_reference' => $paymentRequest->public_reference,
+                'verified_public_reference' => $verifiedPublicReference,
+                'expected_payment_type_id' => $paymentRequest->payment_type_id,
+                'verified_payment_type_id' => $verifiedPaymentTypeId,
             ]);
 
             $paymentRequest->forceFill([

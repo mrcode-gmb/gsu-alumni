@@ -289,6 +289,9 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
                                     <p className="text-sm leading-6 text-slate-600">
                                         The portal prepares the request on the backend first, then launches Paystack in an in-page popup for a smoother student experience.
                                     </p>
+                                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-sm text-emerald-900">
+                                        If you already paid on Paystack but this page still shows pending, click "Check payment status" to verify your payment.
+                                    </div>
                                     {paymentRequest.can_initialize_payment && paymentGatewayReady ? (
                                         <Button className="w-full sm:w-auto" onClick={handleInlineCheckout} disabled={popupLoading || !popupReady}>
                                             {popupLoading ? 'Opening checkout...' : 'Pay with Paystack'}
@@ -300,18 +303,16 @@ export default function StudentPaymentShow({ paymentRequest, paymentGatewayReady
                                             <ArrowRight />
                                         </Button>
                                     )}
-                                    {(paymentRequest.paystack_reference || checkoutPrepared) && (
-                                        <Button variant="outline" asChild>
-                                            <Link
-                                                href={route('student-payments.paystack.verify', paymentRequest.public_reference)}
-                                                method="post"
-                                                as="button"
-                                            >
-                                                Check payment status
-                                                <RefreshCcw />
-                                            </Link>
-                                        </Button>
-                                    )}
+                                    <Button variant="outline" asChild>
+                                        <Link
+                                            href={route('student-payments.paystack.verify', paymentRequest.public_reference)}
+                                            method="post"
+                                            as="button"
+                                        >
+                                            Check payment status
+                                            <RefreshCcw />
+                                        </Link>
+                                    </Button>
                                     {!paymentGatewayReady && (
                                         <p className="text-sm text-amber-700">
                                             Paystack public and secret keys must both be configured before checkout can open.

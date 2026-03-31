@@ -64,6 +64,14 @@ class PaymentRecordController extends Controller
 
     public function verify(PaymentRequest $paymentRequest)
     {
+        if (! $paymentRequest->payment_status->isPending()) {
+            return back()->with('error', 'Only pending payments can be rechecked at this time.');
+        }
+
+        if ($paymentRequest->paystack_reference === null && $paymentRequest->payment_reference === null) {
+            return back()->with('error', 'This payment request has not been initialized with Paystack yet.');
+        }
+
         try {
             $result = $this->paymentCheckoutService->verifyExistingPaymentRequest($paymentRequest);
         } catch (DomainException|RuntimeException $exception) {
