@@ -42,7 +42,7 @@ return [
         'base_url' => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
         'currency' => env('PAYSTACK_CURRENCY', 'NGN'),
         'callback_url' => env('PAYSTACK_CALLBACK_URL'),
-        'timeout' => env('PAYSTACK_TIMEOUT', 50),
+        'timeout' => env('PAYSTACK_TIMEOUT', 15),
         'split_code' => env('PAYSTACK_SPLIT_CODE'),
         'subaccount' => env('PAYSTACK_SUBACCOUNT_CODE'),
         'bearer' => env('PAYSTACK_BEARER'),

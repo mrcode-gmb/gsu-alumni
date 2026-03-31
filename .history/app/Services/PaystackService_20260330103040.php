@@ -69,7 +69,7 @@ class PaystackService
                 ->acceptJson()
                 ->asJson()
                 ->withToken($secretKey)
-                ->timeout((int) config('services.paystack.timeout', 50))
+                ->timeout((int) config('services.paystack.timeout', 15))
                 ->send($method, $endpoint, $payload === [] ? [] : ['json' => $payload])
                 ->throw();
         } catch (ConnectionException|RequestException $exception) {
