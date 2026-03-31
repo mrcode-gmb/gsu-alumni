@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type AdminPaymentDashboardSummary, type BreadcrumbItem, type PaginationLink, type PaymentRequestStatus } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -26,6 +27,7 @@ type CashierPaymentRecord = {
     recorded_at: string | null;
     is_successful: boolean;
     can_recheck: boolean;
+    can_open_receipt: boolean;
 };
 
 interface CashierPaymentRecordPagination {
@@ -47,6 +49,7 @@ interface CashierPaymentRecordIndexProps {
     paymentRecords: CashierPaymentRecordPagination;
     filters: {
         search: string;
+        status: string;
     };
 }
 
@@ -64,13 +67,14 @@ const currencyFormatter = new Intl.NumberFormat('en-NG', {
 export default function CashierPaymentRecordsIndex({ summary, paymentRecords, filters }: CashierPaymentRecordIndexProps) {
     const { flash } = usePage().props as { flash: { success?: string; error?: string } };
     const [search, setSearch] = useState(filters.search ?? '');
+    const [status, setStatus] = useState(filters.status ?? '');
     const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
     const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         router.get(
             route('cashier.payment-records.index'),
-            { search: search.trim() },
+            { search: search.trim(), status: status || undefined },
             { preserveScroll: true, preserveState: true },
         );
     };
@@ -130,26 +134,41 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={handleSearch}>
-                            <div className="grid gap-2">
+                            <div className="grid gap-2 flex-1">
                                 <Label htmlFor="cashier-search">Search</Label>
                                 <Input
                                     id="cashier-search"
                                     value={search}
                                     onChange={(event) => setSearch(event.target.value)}
-                                    placeholder="Search member or receipt"
+                                    placeholder="Search member, reference, or receipt"
                                 />
+                            </div>
+                            <div className="grid gap-2 sm:min-w-[200px]">
+                                <Label htmlFor="cashier-status">Status</Label>
+                                <Select value={status} onValueChange={(value) => setStatus(value)}>
+                                    <SelectTrigger id="cashier-status">
+                                        <SelectValue placeholder="All statuses" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="successful">Successful</SelectItem>
+                                        <SelectItem value="failed">Failed</SelectItem>
+                                        <SelectItem value="abandoned">Abandoned</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <Button type="submit" className="w-full sm:w-auto">
                                 <Search />
                                 Search
                             </Button>
-                            {search && (
+                            {(search || status) && (
                                 <Button
                                     type="button"
                                     variant="outline"
                                     className="w-full sm:w-auto"
                                     onClick={() => {
                                         setSearch('');
+                                        setStatus('');
                                         router.get(route('cashier.payment-records.index'));
                                     }}
                                 >
@@ -178,26 +197,40 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                             <div className="mt-4 grid gap-2 text-sm text-slate-600">
                                                 <p><span className="font-medium text-slate-800">Payment type:</span> {record.payment_type_name}</p>
                                                 <p><span className="font-medium text-slate-800">Base amount:</span> {currencyFormatter.format(Number(record.base_amount))}</p>
+                                                <p><span className="font-medium text-slate-800">Payment reference:</span> {record.payment_reference ?? 'Not recorded'}</p>
                                                 <p><span className="font-medium text-slate-800">Receipt:</span> {record.receipt_number ?? 'Not issued'}</p>
                                                 <p><span className="font-medium text-slate-800">Date:</span> {record.recorded_at ? new Date(record.recorded_at).toLocaleString() : 'Not recorded'}</p>
                                             </div>
 
-                                            {record.can_recheck && (
-                                                <div className="mt-4">
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleVerify(record.public_reference)}
-                                                        disabled={verifyingId === record.public_reference}
-                                                    >
-                                                        {verifyingId === record.public_reference ? (
-                                                            <>
-                                                                <Loader2 className="animate-spin" />
-                                                                Rechecking...
-                                                            </>
-                                                        ) : (
-                                                            'Recheck status'
-                                                        )}
-                                                    </Button>
+                                            {(record.can_recheck || record.can_open_receipt) && (
+                                                <div className="mt-4 flex flex-wrap gap-2">
+                                                    {record.can_recheck && (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => handleVerify(record.public_reference)}
+                                                            disabled={verifyingId === record.public_reference}
+                                                        >
+                                                            {verifyingId === record.public_reference ? (
+                                                                <>
+                                                                    <Loader2 className="animate-spin" />
+                                                                    Rechecking...
+                                                                </>
+                                                            ) : (
+                                                                'Recheck status'
+                                                            )}
+                                                        </Button>
+                                                    )}
+                                                    {record.can_open_receipt && (
+                                                        <Button size="sm" variant="outline" asChild>
+                                                            <Link
+                                                                href={route('cashier.payment-records.receipt', record.public_reference)}
+                                                                method="post"
+                                                                as="button"
+                                                            >
+                                                                Open receipt
+                                                            </Link>
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -212,9 +245,10 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                                 <th className="px-3 py-3 font-medium">Payment type</th>
                                                 <th className="px-3 py-3 font-medium">Base amount</th>
                                                 <th className="px-3 py-3 font-medium">Status</th>
+                                                <th className="px-3 py-3 font-medium">Payment reference</th>
                                                 <th className="px-3 py-3 font-medium">Receipt number</th>
                                                 <th className="px-3 py-3 font-medium">Date</th>
-                                                <th className="px-3 py-3 font-medium">Action</th>
+                                                <th className="px-3 py-3 font-medium">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -229,29 +263,44 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                                     <td className="px-3 py-4">
                                                         <PaymentStatusBadge status={record.payment_status} label={record.payment_status_label} />
                                                     </td>
+                                                    <td className="px-3 py-4">{record.payment_reference ?? 'Not recorded'}</td>
                                                     <td className="px-3 py-4">{record.receipt_number ?? 'Not issued'}</td>
                                                     <td className="px-3 py-4 text-slate-600">
                                                         {record.recorded_at ? new Date(record.recorded_at).toLocaleString() : 'Not recorded'}
                                                     </td>
                                                     <td className="px-3 py-4">
-                                                        {record.can_recheck ? (
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() => handleVerify(record.public_reference)}
-                                                                disabled={verifyingId === record.public_reference}
-                                                            >
-                                                                {verifyingId === record.public_reference ? (
-                                                                    <>
-                                                                        <Loader2 className="animate-spin" />
-                                                                        Rechecking...
-                                                                    </>
-                                                                ) : (
-                                                                    'Recheck status'
-                                                                )}
-                                                            </Button>
-                                                        ) : (
-                                                            <span className="text-xs text-slate-500">No action</span>
-                                                        )}
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {record.can_recheck && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => handleVerify(record.public_reference)}
+                                                                    disabled={verifyingId === record.public_reference}
+                                                                >
+                                                                    {verifyingId === record.public_reference ? (
+                                                                        <>
+                                                                            <Loader2 className="animate-spin" />
+                                                                            Rechecking...
+                                                                        </>
+                                                                    ) : (
+                                                                        'Recheck status'
+                                                                    )}
+                                                                </Button>
+                                                            )}
+                                                            {record.can_open_receipt && (
+                                                                <Button size="sm" variant="outline" asChild>
+                                                                    <Link
+                                                                        href={route('cashier.payment-records.receipt', record.public_reference)}
+                                                                        method="post"
+                                                                        as="button"
+                                                                    >
+                                                                        Open receipt
+                                                                    </Link>
+                                                                </Button>
+                                                            )}
+                                                            {!record.can_recheck && !record.can_open_receipt && (
+                                                                <span className="text-xs text-slate-500">No action</span>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}

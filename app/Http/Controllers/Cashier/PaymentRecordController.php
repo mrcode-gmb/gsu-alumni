@@ -28,6 +28,9 @@ class PaymentRecordController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
+        $statusFilter = trim((string) $request->query('status', ''));
+        $allowedStatuses = collect(PaymentRequestStatus::cases())->map(fn (PaymentRequestStatus $status): string => $status->value)->all();
+        $statusFilter = in_array($statusFilter, $allowedStatuses, true) ? $statusFilter : '';
 
         $query = PaymentRequest::query()
             ->with(['receipt:id,payment_request_id,receipt_number'])
@@ -46,6 +49,10 @@ class PaymentRecordController extends Controller
             });
         }
 
+        if ($statusFilter !== '') {
+            $query->where('payment_status', $statusFilter);
+        }
+
         $paymentRecords = $query->paginate(20)->withQueryString();
         $paymentRecords->setCollection(
             $paymentRecords->getCollection()->map(
@@ -58,6 +65,7 @@ class PaymentRecordController extends Controller
             'paymentRecords' => $this->paginationPayload($paymentRecords),
             'filters' => [
                 'search' => $search,
+                'status' => $statusFilter,
             ],
         ]);
     }
@@ -94,6 +102,19 @@ class PaymentRecordController extends Controller
         return back()->with('success', $message);
     }
 
+    public function receipt(PaymentRequest $paymentRequest)
+    {
+        try {
+            $receipt = $this->receiptService->issueForPaymentRequest($paymentRequest);
+        } catch (DomainException $exception) {
+            return back()->with('error', $exception->getMessage());
+        } catch (Throwable $exception) {
+            return back()->with('error', 'We could not open the receipt right now. Please try again.');
+        }
+
+        return redirect()->to($this->receiptService->signedShowUrl($receipt));
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -116,6 +137,7 @@ class PaymentRecordController extends Controller
             'is_successful' => $paymentRequest->payment_status === PaymentRequestStatus::Successful,
             'can_recheck' => $paymentRequest->payment_status === PaymentRequestStatus::Pending
                 && ($paymentRequest->paystack_reference !== null || $paymentRequest->payment_reference !== null),
+            'can_open_receipt' => $paymentRequest->payment_status === PaymentRequestStatus::Successful,
         ];
     }
 
