@@ -6,15 +6,22 @@ use App\Enums\PaymentRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentRequest;
 use App\Services\AdminPaymentRecordService;
+use App\Services\PaymentCheckoutService;
+use App\Services\ReceiptService;
+use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
+use Throwable;
 
 class PaymentRecordController extends Controller
 {
     public function __construct(
         protected AdminPaymentRecordService $adminPaymentRecordService,
+        protected PaymentCheckoutService $paymentCheckoutService,
+        protected ReceiptService $receiptService,
     ) {
     }
 
@@ -55,6 +62,30 @@ class PaymentRecordController extends Controller
         ]);
     }
 
+    public function verify(PaymentRequest $paymentRequest)
+    {
+        try {
+            $result = $this->paymentCheckoutService->verifyExistingPaymentRequest($paymentRequest);
+        } catch (DomainException|RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        } catch (Throwable $exception) {
+            return back()->with('error', 'We could not recheck this payment right now. Please try again shortly.');
+        }
+
+        $paymentRequest = $result['paymentRequest'];
+        $message = $result['message'];
+
+        if ($paymentRequest->payment_status->isSuccessful()) {
+            try {
+                $this->receiptService->issueForPaymentRequest($paymentRequest);
+            } catch (Throwable $exception) {
+                return back()->with('success', $message.' Receipt generation can be retried later.');
+            }
+        }
+
+        return back()->with('success', $message);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -75,6 +106,8 @@ class PaymentRecordController extends Controller
             'receipt_number' => $receipt?->receipt_number,
             'recorded_at' => $recordedAt?->toIso8601String(),
             'is_successful' => $paymentRequest->payment_status === PaymentRequestStatus::Successful,
+            'can_recheck' => $paymentRequest->payment_status === PaymentRequestStatus::Pending
+                && ($paymentRequest->paystack_reference !== null || $paymentRequest->payment_reference !== null),
         ];
     }
 

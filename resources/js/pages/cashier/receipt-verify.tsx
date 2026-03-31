@@ -1,5 +1,6 @@
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { PaymentStatusBadge } from '@/components/payment-records/payment-status-badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { CheckCircle2, Search } from 'lucide-react';
+import { type BreadcrumbItem, type PaymentRequestStatus, type SharedData } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { CheckCircle2, Loader2, Search } from 'lucide-react';
+import { useState } from 'react';
 
 type ReceiptVerification = {
+    public_reference: string;
     receipt_number: string;
     member_name: string;
     matric_number: string;
@@ -20,6 +23,8 @@ type ReceiptVerification = {
     paid_at: string | null;
     payment_reference: string | null;
     status: string;
+    payment_status: PaymentRequestStatus;
+    can_recheck: boolean;
 };
 
 interface ReceiptVerifyProps {
@@ -42,10 +47,23 @@ export default function CashierReceiptVerify({ verification }: ReceiptVerifyProp
     const { data, setData, post, processing } = useForm({
         matric_number: '',
     });
+    const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
     const submit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         post(route('cashier.receipts.verify.submit'));
+    };
+
+    const handleRecheck = (publicReference: string) => {
+        setVerifyingId(publicReference);
+        router.post(
+            route('cashier.payment-records.verify', publicReference),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setVerifyingId(null),
+            },
+        );
     };
 
     return (
@@ -97,9 +115,9 @@ export default function CashierReceiptVerify({ verification }: ReceiptVerifyProp
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-emerald-900">
                                 <CheckCircle2 className="size-5" />
-                                Verified receipts
+                                Payment requests
                             </CardTitle>
-                            <CardDescription>{verification.length} receipt(s) found for this member.</CardDescription>
+                            <CardDescription>{verification.length} payment record(s) found for this member.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {verification.map((receipt, index) => (
@@ -107,11 +125,9 @@ export default function CashierReceiptVerify({ verification }: ReceiptVerifyProp
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
                                             <p className="text-xs font-semibold tracking-[0.16em] text-emerald-700 uppercase">Receipt number</p>
-                                            <p className="mt-1 font-semibold text-emerald-950">{receipt.receipt_number}</p>
+                                            <p className="mt-1 font-semibold text-emerald-950">{receipt.receipt_number ?? 'Not issued'}</p>
                                         </div>
-                                        <span className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">
-                                            {receipt.status}
-                                        </span>
+                                        <PaymentStatusBadge status={receipt.payment_status} label={receipt.status} />
                                     </div>
 
                                     <Separator className="my-4" />
@@ -146,6 +162,25 @@ export default function CashierReceiptVerify({ verification }: ReceiptVerifyProp
                                             </p>
                                         </div>
                                     </div>
+
+                                    {receipt.can_recheck && (
+                                        <div className="mt-4">
+                                            <Button
+                                                size="sm"
+                                                onClick={() => handleRecheck(receipt.public_reference)}
+                                                disabled={verifyingId === receipt.public_reference}
+                                            >
+                                                {verifyingId === receipt.public_reference ? (
+                                                    <>
+                                                        <Loader2 className="animate-spin" />
+                                                        Rechecking...
+                                                    </>
+                                                ) : (
+                                                    'Recheck status'
+                                                )}
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </CardContent>

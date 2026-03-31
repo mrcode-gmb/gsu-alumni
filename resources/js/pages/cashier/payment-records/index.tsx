@@ -2,14 +2,15 @@ import Heading from '@/components/heading';
 import { PaginationLinks } from '@/components/pagination-links';
 import { PaymentRecordSummaryCards } from '@/components/payment-records/payment-record-summary-cards';
 import { PaymentStatusBadge } from '@/components/payment-records/payment-status-badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { type AdminPaymentDashboardSummary, type BreadcrumbItem, type PaginationLink, type PaymentRequestStatus } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { ArrowRight, Search } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ArrowRight, Loader2, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 type CashierPaymentRecord = {
@@ -24,6 +25,7 @@ type CashierPaymentRecord = {
     receipt_number: string | null;
     recorded_at: string | null;
     is_successful: boolean;
+    can_recheck: boolean;
 };
 
 interface CashierPaymentRecordPagination {
@@ -60,7 +62,9 @@ const currencyFormatter = new Intl.NumberFormat('en-NG', {
 });
 
 export default function CashierPaymentRecordsIndex({ summary, paymentRecords, filters }: CashierPaymentRecordIndexProps) {
+    const { flash } = usePage().props as { flash: { success?: string; error?: string } };
     const [search, setSearch] = useState(filters.search ?? '');
+    const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
     const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -68,6 +72,18 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
             route('cashier.payment-records.index'),
             { search: search.trim() },
             { preserveScroll: true, preserveState: true },
+        );
+    };
+
+    const handleVerify = (publicReference: string) => {
+        setVerifyingId(publicReference);
+        router.post(
+            route('cashier.payment-records.verify', publicReference),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setVerifyingId(null),
+            },
         );
     };
 
@@ -87,6 +103,20 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                     title="Payment records"
                     description="Review all member payments and confirm verified receipts when needed."
                 />
+
+                {flash?.success && (
+                    <Alert>
+                        <AlertTitle>Payment update</AlertTitle>
+                        <AlertDescription>{flash.success}</AlertDescription>
+                    </Alert>
+                )}
+
+                {flash?.error && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Payment update</AlertTitle>
+                        <AlertDescription>{flash.error}</AlertDescription>
+                    </Alert>
+                )}
 
                 <PaymentRecordSummaryCards summary={summary} variant="cashier" />
 
@@ -151,6 +181,25 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                                 <p><span className="font-medium text-slate-800">Receipt:</span> {record.receipt_number ?? 'Not issued'}</p>
                                                 <p><span className="font-medium text-slate-800">Date:</span> {record.recorded_at ? new Date(record.recorded_at).toLocaleString() : 'Not recorded'}</p>
                                             </div>
+
+                                            {record.can_recheck && (
+                                                <div className="mt-4">
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleVerify(record.public_reference)}
+                                                        disabled={verifyingId === record.public_reference}
+                                                    >
+                                                        {verifyingId === record.public_reference ? (
+                                                            <>
+                                                                <Loader2 className="animate-spin" />
+                                                                Rechecking...
+                                                            </>
+                                                        ) : (
+                                                            'Recheck status'
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -165,6 +214,7 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                                 <th className="px-3 py-3 font-medium">Status</th>
                                                 <th className="px-3 py-3 font-medium">Receipt number</th>
                                                 <th className="px-3 py-3 font-medium">Date</th>
+                                                <th className="px-3 py-3 font-medium">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -182,6 +232,26 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                                     <td className="px-3 py-4">{record.receipt_number ?? 'Not issued'}</td>
                                                     <td className="px-3 py-4 text-slate-600">
                                                         {record.recorded_at ? new Date(record.recorded_at).toLocaleString() : 'Not recorded'}
+                                                    </td>
+                                                    <td className="px-3 py-4">
+                                                        {record.can_recheck ? (
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => handleVerify(record.public_reference)}
+                                                                disabled={verifyingId === record.public_reference}
+                                                            >
+                                                                {verifyingId === record.public_reference ? (
+                                                                    <>
+                                                                        <Loader2 className="animate-spin" />
+                                                                        Rechecking...
+                                                                    </>
+                                                                ) : (
+                                                                    'Recheck status'
+                                                                )}
+                                                            </Button>
+                                                        ) : (
+                                                            <span className="text-xs text-slate-500">No action</span>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))}
