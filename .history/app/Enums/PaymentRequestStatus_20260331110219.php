@@ -28,8 +28,8 @@ enum PaymentRequestStatus: string
     {
         return $this === self::Successful;
     }
-    public function isPending(): bool
+    public function isPending()
     {
-        return $this === self::Pending;
+
     }
 }
