@@ -27,6 +27,8 @@ const cashierSummaryItems: Array<{
     { key: 'total_payment_requests', label: 'Total payment requests' },
     { key: 'total_successful_payments', label: 'Verified payments' },
     { key: 'total_pending_payments', label: 'Pending payments' },
+    { key: 'total_failed_payments', label: 'Failed payments' },
+    { key: 'total_abandoned_payments', label: 'Abandoned payments' },
     { key: 'total_amount_collected', label: 'Amount collected (base fees)', isCurrency: true },
 ];
 
@@ -40,7 +42,7 @@ export function PaymentRecordSummaryCards({
     const items = variant === 'cashier' ? cashierSummaryItems : summaryItems;
 
     return (
-        <div className={`grid gap-4 md:grid-cols-2 ${variant === 'cashier' ? 'xl:grid-cols-4' : 'xl:grid-cols-5'}`}>
+        <div className={`grid gap-4 md:grid-cols-2 ${variant === 'cashier' ? 'xl:grid-cols-6' : 'xl:grid-cols-5'}`}>
             {items.map((item) => (
                 <Card key={item.key}>
                     <CardHeader className="gap-1">

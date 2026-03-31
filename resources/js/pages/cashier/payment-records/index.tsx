@@ -147,7 +147,17 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                             </div>
                             <div className="grid gap-2 sm:min-w-[200px]">
                                 <Label htmlFor="cashier-status">Status</Label>
-                                <Select value={status} onValueChange={(value) => setStatus(value)}>
+                                <Select
+                                    value={status}
+                                    onValueChange={(value) => {
+                                        setStatus(value);
+                                        router.get(
+                                            route('cashier.payment-records.index'),
+                                            { search: search.trim(), status: value || undefined, per_page: perPage || undefined },
+                                            { preserveScroll: true, preserveState: true },
+                                        );
+                                    }}
+                                >
                                     <SelectTrigger id="cashier-status">
                                         <SelectValue placeholder="All statuses" />
                                     </SelectTrigger>
@@ -161,7 +171,17 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                             </div>
                             <div className="grid gap-2 sm:min-w-[160px]">
                                 <Label htmlFor="cashier-per-page">Per page</Label>
-                                <Select value={perPage} onValueChange={(value) => setPerPage(value)}>
+                                <Select
+                                    value={perPage}
+                                    onValueChange={(value) => {
+                                        setPerPage(value);
+                                        router.get(
+                                            route('cashier.payment-records.index'),
+                                            { search: search.trim(), status: status || undefined, per_page: value || undefined },
+                                            { preserveScroll: true, preserveState: true },
+                                        );
+                                    }}
+                                >
                                     <SelectTrigger id="cashier-per-page">
                                         <SelectValue placeholder="20" />
                                     </SelectTrigger>

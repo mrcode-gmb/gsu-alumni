@@ -23,6 +23,11 @@ export function AppSidebar() {
                       icon: FileText,
                   },
                   {
+                      title: 'Successful Payments',
+                      href: route('cashier.payment-records.successful'),
+                      icon: FileText,
+                  },
+                  {
                       title: 'Receipt Verification',
                       href: route('cashier.receipts.verify'),
                       icon: ShieldCheck,

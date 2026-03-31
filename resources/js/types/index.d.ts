@@ -216,6 +216,7 @@ export interface AdminPaymentDashboardSummary {
     total_successful_payments: number;
     total_pending_payments: number;
     total_failed_payments: number;
+    total_abandoned_payments: number;
     total_amount_collected: string;
 }
 

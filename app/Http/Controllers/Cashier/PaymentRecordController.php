@@ -81,6 +81,15 @@ class PaymentRecordController extends Controller
         ]);
     }
 
+    public function successful(Request $request): Response
+    {
+        $request = $request->merge([
+            'status' => PaymentRequestStatus::Successful->value,
+        ]);
+
+        return $this->index($request);
+    }
+
     public function verify(PaymentRequest $paymentRequest)
     {
         if (! $paymentRequest->payment_status->isPending()) {

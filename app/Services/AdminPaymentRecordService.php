@@ -70,6 +70,10 @@ class AdminPaymentRecordService
                 [PaymentRequestStatus::Failed->value],
             )
             ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_abandoned_payments',
+                [PaymentRequestStatus::Abandoned->value],
+            )
+            ->selectRaw(
                 'COALESCE(SUM(CASE WHEN payment_status = ? THEN amount ELSE 0 END), 0) as total_amount_collected',
                 [PaymentRequestStatus::Successful->value],
             )
@@ -80,6 +84,7 @@ class AdminPaymentRecordService
             'total_successful_payments' => (int) ($summary?->total_successful_payments ?? 0),
             'total_pending_payments' => (int) ($summary?->total_pending_payments ?? 0),
             'total_failed_payments' => (int) ($summary?->total_failed_payments ?? 0),
+            'total_abandoned_payments' => (int) ($summary?->total_abandoned_payments ?? 0),
             'total_amount_collected' => number_format((float) ($summary?->total_amount_collected ?? 0), 2, '.', ''),
         ];
     }
@@ -104,6 +109,10 @@ class AdminPaymentRecordService
                 [PaymentRequestStatus::Failed->value],
             )
             ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_abandoned_payments',
+                [PaymentRequestStatus::Abandoned->value],
+            )
+            ->selectRaw(
                 'COALESCE(SUM(CASE WHEN payment_status = ? THEN base_amount ELSE 0 END), 0) as total_amount_collected',
                 [PaymentRequestStatus::Successful->value],
             )
@@ -114,6 +123,7 @@ class AdminPaymentRecordService
             'total_successful_payments' => (int) ($summary?->total_successful_payments ?? 0),
             'total_pending_payments' => (int) ($summary?->total_pending_payments ?? 0),
             'total_failed_payments' => (int) ($summary?->total_failed_payments ?? 0),
+            'total_abandoned_payments' => (int) ($summary?->total_abandoned_payments ?? 0),
             'total_amount_collected' => number_format((float) ($summary?->total_amount_collected ?? 0), 2, '.', ''),
         ];
     }
@@ -139,6 +149,10 @@ class AdminPaymentRecordService
                 [PaymentRequestStatus::Failed->value],
             )
             ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_abandoned_payments',
+                [PaymentRequestStatus::Abandoned->value],
+            )
+            ->selectRaw(
                 'COALESCE(SUM(CASE WHEN payment_status = ? THEN amount ELSE 0 END), 0) as total_amount_collected',
                 [PaymentRequestStatus::Successful->value],
             )
@@ -149,6 +163,7 @@ class AdminPaymentRecordService
             'total_successful_payments' => (int) ($summary?->total_successful_payments ?? 0),
             'total_pending_payments' => (int) ($summary?->total_pending_payments ?? 0),
             'total_failed_payments' => (int) ($summary?->total_failed_payments ?? 0),
+            'total_abandoned_payments' => (int) ($summary?->total_abandoned_payments ?? 0),
             'total_amount_collected' => number_format((float) ($summary?->total_amount_collected ?? 0), 2, '.', ''),
         ];
     }
