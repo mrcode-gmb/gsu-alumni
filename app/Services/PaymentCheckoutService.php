@@ -52,6 +52,20 @@ class PaymentCheckoutService
 
         $response = $this->paystackService->initializeTransaction($payload);
         $data = $response['data'] ?? [];
+        $authorizationUrl = (string) ($data['authorization_url'] ?? '');
+        $accessCode = (string) ($data['access_code'] ?? '');
+        $responseReference = (string) ($data['reference'] ?? '');
+
+        if ($authorizationUrl === '' || $accessCode === '' || $responseReference === '') {
+            Log::warning('Paystack initialization returned an incomplete response.', [
+                'payment_request_id' => $paymentRequest->id,
+                'payment_reference' => $paymentReference,
+                'paystack_reference' => $paystackReference,
+                'response' => $response,
+            ]);
+
+            throw new RuntimeException('Paystack did not return a valid initialization response.');
+        }
 
         Log::info('Paystack initialize response stored.', [
             'payment_request_id' => $paymentRequest->id,
@@ -64,7 +78,7 @@ class PaymentCheckoutService
             'payment_reference' => $paymentReference,
             'paystack_reference' => $paystackReference,
             'gateway_response' => (string) ($response['message'] ?? 'Authorization URL created'),
-            'transaction_reference' => (string) ($data['access_code'] ?? ''),
+            'transaction_reference' => $accessCode,
             'initialization_payload' => $response,
         ])->save();
 
@@ -76,7 +90,7 @@ class PaymentCheckoutService
 
         return [
             'paymentRequest' => $paymentRequest->refresh(),
-            'authorizationUrl' => (string) ($data['authorization_url'] ?? ''),
+            'authorizationUrl' => $authorizationUrl,
         ];
     }
 
@@ -118,25 +132,34 @@ class PaymentCheckoutService
 
         $checkout = $this->applySplitConfig($checkout, $paymentRequest);
 
+        $existingPayload = is_array($paymentRequest->initialization_payload)
+            ? $paymentRequest->initialization_payload
+            : [];
+
+        $popupPayload = [
+            'mode' => 'popup',
+            'prepared_at' => now()->toIso8601String(),
+            'checkout' => [
+                'email' => $checkout['email'],
+                'amount' => $checkout['amount'],
+                'currency' => $checkout['currency'],
+                'reference' => $checkout['reference'],
+                'callback_url' => $checkout['callback_url'],
+                'metadata' => $checkout['metadata'],
+                'split_code' => $checkout['split_code'] ?? null,
+                'subaccount' => $checkout['subaccount'] ?? null,
+                'transaction_charge' => $checkout['transaction_charge'] ?? null,
+                'bearer' => $checkout['bearer'] ?? null,
+            ],
+        ];
+
         $paymentRequest->forceFill([
             'payment_reference' => $paymentReference,
             'paystack_reference' => $paystackReference,
             'gateway_response' => 'Popup checkout prepared.',
             'initialization_payload' => [
-                'mode' => 'popup',
-                'prepared_at' => now()->toIso8601String(),
-                'checkout' => [
-                    'email' => $checkout['email'],
-                    'amount' => $checkout['amount'],
-                    'currency' => $checkout['currency'],
-                    'reference' => $checkout['reference'],
-                    'callback_url' => $checkout['callback_url'],
-                    'metadata' => $checkout['metadata'],
-                    'split_code' => $checkout['split_code'] ?? null,
-                    'subaccount' => $checkout['subaccount'] ?? null,
-                    'transaction_charge' => $checkout['transaction_charge'] ?? null,
-                    'bearer' => $checkout['bearer'] ?? null,
-                ],
+                ...$existingPayload,
+                'popup' => $popupPayload,
             ],
         ])->save();
 

@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PortalLayout from '@/layouts/portal-layout';
-import { type SelectOption, type StudentDepartmentOption, type StudentPaymentTypeOption } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
+import { type SelectOption, type SharedData, type StudentDepartmentOption, type StudentPaymentTypeOption } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { ArrowRight, CreditCard } from 'lucide-react';
 import { type FormEventHandler } from 'react';
 
@@ -38,6 +38,7 @@ interface StudentPaymentCreateProps {
 }
 
 export default function StudentPaymentCreate({ faculties, departments, programTypes, graduationSessions, paymentTypes }: StudentPaymentCreateProps) {
+    const { flash } = usePage<SharedData>().props;
     const { data, setData, post, processing, errors } = useForm<StudentPaymentFormData>({
         full_name: '',
         matric_number: '',
@@ -114,6 +115,13 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
                         <CardDescription>Fill in the details exactly as they should appear on the payment request.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        {flash.error && (
+                            <Alert className="mb-6" variant="destructive">
+                                <AlertTitle>Payment initialization failed</AlertTitle>
+                                <AlertDescription>{flash.error}</AlertDescription>
+                            </Alert>
+                        )}
+
                         {!hasPaymentTypes && (
                             <Alert className="mb-6">
                                 <AlertTitle>No active payment types available</AlertTitle>

@@ -101,7 +101,7 @@ class StudentPaymentController extends Controller
         $reused = $result['reused'];
 
         try {
-            $this->paymentCheckoutService->preparePopupPayment($paymentRequest);
+            $this->paymentCheckoutService->initializePayment($paymentRequest);
         } catch (Throwable $exception) {
             if ($paymentRequest->initialization_payload === null) {
                 $paymentRequest->delete();
