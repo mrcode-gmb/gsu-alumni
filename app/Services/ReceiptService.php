@@ -51,23 +51,24 @@ class ReceiptService
         });
     }
 
-    public function findByReceiptNumberAndMatric(string $receiptNumber, string $matricNumber): ?Receipt
+    public function findLatestByEmailAndMatric(string $email, string $matricNumber): ?Receipt
     {
-        $receiptNumber = strtoupper(trim($receiptNumber));
+        $email = strtolower(trim($email));
         $matricNumber = strtoupper($this->normalizeText($matricNumber));
 
-        if ($receiptNumber === '' || $matricNumber === '') {
+        if ($email === '' || $matricNumber === '') {
             return null;
         }
 
         return Receipt::query()
             ->with('paymentRequest')
-            ->where('receipt_number', $receiptNumber)
-            ->whereHas('paymentRequest', function ($query) use ($matricNumber): void {
+            ->whereHas('paymentRequest', function ($query) use ($email, $matricNumber): void {
                 $query
                     ->where('matric_number', $matricNumber)
+                    ->whereRaw('LOWER(email) = ?', [$email])
                     ->where('payment_status', 'successful');
             })
+            ->orderByDesc('issued_at')
             ->first();
     }
 

@@ -11,14 +11,14 @@ import { FileSearch, Printer, ShieldCheck } from 'lucide-react';
 import { type FormEventHandler } from 'react';
 
 type ReceiptLookupForm = {
-    receipt_number: string;
+    email: string;
     matric_number: string;
 };
 
 export default function StudentReceiptLookup() {
     const { flash } = usePage<SharedData>().props;
     const { data, setData, post, processing, errors } = useForm<ReceiptLookupForm>({
-        receipt_number: '',
+        email: '',
         matric_number: '',
     });
 
@@ -34,7 +34,7 @@ export default function StudentReceiptLookup() {
             <PortalLayout
                 eyebrow="Receipt Lookup"
                 title="Find and reprint a verified payment receipt"
-                description="Use the receipt number together with the matching matric number to reopen the official receipt safely."
+                description="Use the same email address and matric number used during payment to reopen the latest verified receipt safely."
                 aside={
                     <div className="grid gap-4">
                         <Card className="border-emerald-100 bg-emerald-50/80">
@@ -44,7 +44,7 @@ export default function StudentReceiptLookup() {
                                     Safe access
                                 </CardTitle>
                                 <CardDescription className="text-emerald-800/80">
-                                    Receipts are not exposed by guessable URLs. The lookup form matches the receipt number with the student matric number first.
+                                    Receipts are not exposed by guessable URLs. The lookup form matches the member email address with the matric number first.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -58,9 +58,9 @@ export default function StudentReceiptLookup() {
                                 <CardDescription>Only successfully verified payments can produce a receipt.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
-                                <p>Use the exact receipt number issued after payment verification.</p>
+                                <p>Use the same email address entered during the payment request.</p>
                                 <p>Enter the same matric number used on the payment request.</p>
-                                <p>If the payment was successful but the receipt was not prepared earlier, the system will reuse or regenerate the same receipt record safely.</p>
+                                <p>If the member has more than one successful payment, the latest receipt will open first.</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -92,15 +92,16 @@ export default function StudentReceiptLookup() {
                         <form className="space-y-5" onSubmit={submit}>
                             <div className="grid gap-5">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="receipt_number">Receipt number</Label>
+                                    <Label htmlFor="email">Email address</Label>
                                     <Input
-                                        id="receipt_number"
-                                        value={data.receipt_number}
-                                        onChange={(event) => setData('receipt_number', event.target.value)}
-                                        placeholder="GSU-RCP-20260327-ABC123"
+                                        id="email"
+                                        type="email"
+                                        value={data.email}
+                                        onChange={(event) => setData('email', event.target.value)}
+                                        placeholder="member@example.com"
                                         disabled={processing}
                                     />
-                                    <InputError message={errors.receipt_number} />
+                                    <InputError message={errors.email} />
                                 </div>
 
                                 <div className="grid gap-2">

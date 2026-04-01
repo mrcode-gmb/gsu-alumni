@@ -9,7 +9,7 @@ import PortalLayout from '@/layouts/portal-layout';
 import { type SelectOption, type SharedData, type StudentDepartmentOption, type StudentPaymentTypeOption } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { ArrowRight, CreditCard } from 'lucide-react';
-import { type FormEventHandler } from 'react';
+import { type FormEventHandler, useMemo } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('en-NG', {
     style: 'currency',
@@ -59,7 +59,23 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
     const hasProgramTypes = programTypes.length > 0;
     const hasDepartments = departments.length > 0;
     const hasGraduationSessions = graduationSessions.length > 0;
-    const canSubmit = hasPaymentTypes && hasProgramTypes && hasFaculties && hasDepartments && hasGraduationSessions && !processing;
+    const matricPattern = /^[A-Z0-9\/\-.]+$/;
+    const matricError = useMemo(() => {
+        if (!data.matric_number.trim()) {
+            return '';
+        }
+        return matricPattern.test(data.matric_number.trim())
+            ? ''
+            : 'Use only letters, numbers, slashes, dots, or hyphens for the matric number.';
+    }, [data.matric_number]);
+    const canSubmit =
+        hasPaymentTypes &&
+        hasProgramTypes &&
+        hasFaculties &&
+        hasDepartments &&
+        hasGraduationSessions &&
+        !processing &&
+        !matricError;
 
     const submit: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
@@ -73,7 +89,7 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
             <PortalLayout
                 aside={
                     <div className="grid gap-4">
-                        <Card className="border-slate-200 bg-white/90">
+                        <Card className="min-w-0 border-slate-200 bg-white/90">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <CreditCard className="size-5" />
@@ -86,9 +102,9 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
                             <CardContent className="space-y-3">
                                 {selectedPaymentType ? (
                                     <>
-                                        <div>
-                                            <p className="text-sm font-semibold text-slate-900">{selectedPaymentType.name}</p>
-                                            <p className="mt-1 text-2xl font-semibold text-slate-950">
+                                        <div className="min-w-0">
+                                            <p className="text-sm leading-6 font-semibold break-words text-slate-900">{selectedPaymentType.name}</p>
+                                            <p className="mt-1 text-xl font-semibold break-words text-slate-950 sm:text-2xl">
                                                 {currencyFormatter.format(Number(selectedPaymentType.amount))}
                                             </p>
                                             <p className="mt-1 text-xs font-medium tracking-[0.16em] text-slate-500 uppercase">
@@ -109,7 +125,7 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
                     </div>
                 }
             >
-                <Card className="border-slate-200 bg-white/95 shadow-sm">
+                <Card className="min-w-0 border-slate-200 bg-white/95 shadow-sm">
                     <CardHeader>
                         <CardTitle>Member details</CardTitle>
                         <CardDescription>Fill in the details exactly as they should appear on the payment request.</CardDescription>
@@ -195,11 +211,15 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
                                     <Input
                                         id="matric_number"
                                         value={data.matric_number}
-                                        onChange={(event) => setData('matric_number', event.target.value)}
+                                        onChange={(event) => setData('matric_number', event.target.value.toUpperCase())}
+                                        inputMode="text"
+                                        autoCapitalize="characters"
+                                        pattern="[A-Z0-9/.\-]+"
+                                        aria-invalid={Boolean(matricError || errors.matric_number)}
                                         placeholder="GSU/19/1234"
                                         disabled={processing}
                                     />
-                                    <InputError message={errors.matric_number} />
+                                    <InputError message={errors.matric_number || matricError} />
                                 </div>
 
                                 <div className="grid gap-2">
@@ -341,7 +361,7 @@ export default function StudentPaymentCreate({ faculties, departments, programTy
 
                             <div className="rounded-2xl border bg-slate-50 p-4">
                                 <p className="text-sm font-medium text-slate-700">Total payable</p>
-                                <p className="mt-1 text-2xl font-semibold text-slate-950">
+                                <p className="mt-1 text-xl font-semibold break-words text-slate-950 sm:text-2xl">
                                     {selectedPaymentType ? currencyFormatter.format(Number(selectedPaymentType.amount)) : 'Select a payment type'}
                                 </p>
                             </div>

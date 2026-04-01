@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,7 +22,7 @@ import {
     type SharedData,
 } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CalendarRange, Download, Eye, FileSpreadsheet, Printer, ReceiptText, RotateCcw, Search } from 'lucide-react';
+import { CalendarRange, Download, Eye, FileSpreadsheet, Printer, ReceiptText, RotateCcw, Search, Trash2 } from 'lucide-react';
 import { type FormEvent, useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -76,6 +77,66 @@ export default function PaymentRecordIndex({
 }: PaymentRecordIndexProps) {
     const { flash, errors } = usePage<SharedData>().props;
     const [form, setForm] = useState<AdminPaymentRecordFilters>(filters);
+    const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
+    const pageReferences = useMemo(
+        () => paymentRecords.data.map((record) => record.public_reference),
+        [paymentRecords.data],
+    );
+
+    const allSelected = pageReferences.length > 0 && pageReferences.every((reference) => selectedRecords.has(reference));
+
+    const toggleSelectAll = () => {
+        setSelectedRecords((current) => {
+            if (allSelected) {
+                const next = new Set(current);
+                pageReferences.forEach((reference) => next.delete(reference));
+                return next;
+            }
+
+            const next = new Set(current);
+            pageReferences.forEach((reference) => next.add(reference));
+            return next;
+        });
+    };
+
+    const toggleRecord = (reference: string) => {
+        setSelectedRecords((current) => {
+            const next = new Set(current);
+            if (next.has(reference)) {
+                next.delete(reference);
+            } else {
+                next.add(reference);
+            }
+            return next;
+        });
+    };
+
+    const handleBulkDelete = () => {
+        if (selectedRecords.size === 0) {
+            return;
+        }
+        setDeleteOpen(true);
+    };
+
+    const confirmBulkDelete = () => {
+        setDeleting(true);
+        router.post(
+            '/admin/payment-records/bulk-delete',
+            { records: Array.from(selectedRecords) },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSelectedRecords(new Set());
+                    setDeleteOpen(false);
+                },
+                onError: () => setDeleteOpen(false),
+                onFinish: () => setDeleting(false),
+            },
+        );
+    };
 
     const submitFilters = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -120,6 +181,24 @@ export default function PaymentRecordIndex({
                     />
 
                     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                        <Button
+                            className="w-full sm:w-auto"
+                            variant="destructive"
+                            onClick={handleBulkDelete}
+                            disabled={selectedRecords.size === 0}
+                        >
+                            {deleting ? (
+                                <>
+                                    <Trash2 className="animate-pulse" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 />
+                                    Delete selected
+                                </>
+                            )}
+                        </Button>
                         <Button className="w-full sm:w-auto" asChild>
                             <a href={pdfUrl}>
                                 <Download />
@@ -369,7 +448,16 @@ export default function PaymentRecordIndex({
                                                     <p className="text-muted-foreground mt-1 text-xs">{record.matric_number}</p>
                                                     <p className="text-muted-foreground mt-1 text-xs">{record.email}</p>
                                                 </div>
-                                                <PaymentStatusBadge status={record.payment_status} label={record.payment_status_label} />
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="h-4 w-4 accent-emerald-600"
+                                                        checked={selectedRecords.has(record.public_reference)}
+                                                        onChange={() => toggleRecord(record.public_reference)}
+                                                        aria-label={`Select ${record.full_name}`}
+                                                    />
+                                                    <PaymentStatusBadge status={record.payment_status} label={record.payment_status_label} />
+                                                </div>
                                             </div>
 
                                             <div className="mt-4 space-y-2 text-sm text-slate-600">
@@ -418,6 +506,15 @@ export default function PaymentRecordIndex({
                                     <table className="w-full min-w-[1240px] text-sm">
                                         <thead>
                                             <tr className="border-b text-left">
+                                                <th className="px-3 py-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="h-4 w-4 accent-emerald-600"
+                                                        checked={allSelected}
+                                                        onChange={toggleSelectAll}
+                                                        aria-label="Select all records"
+                                                    />
+                                                </th>
                                                 <th className="px-3 py-3 font-medium">Member</th>
                                                 <th className="px-3 py-3 font-medium">Department</th>
                                                 <th className="px-3 py-3 font-medium">Faculty</th>
@@ -433,6 +530,15 @@ export default function PaymentRecordIndex({
                                         <tbody>
                                             {paymentRecords.data.map((record) => (
                                                 <tr key={record.public_reference} className="border-b align-top last:border-b-0">
+                                                    <td className="px-3 py-4">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="h-4 w-4 accent-emerald-600"
+                                                            checked={selectedRecords.has(record.public_reference)}
+                                                            onChange={() => toggleRecord(record.public_reference)}
+                                                            aria-label={`Select ${record.full_name}`}
+                                                        />
+                                                    </td>
                                                     <td className="px-3 py-4">
                                                         <p className="font-medium text-slate-900">{record.full_name}</p>
                                                         <p className="text-muted-foreground mt-1 text-xs">{record.matric_number}</p>
@@ -496,6 +602,36 @@ export default function PaymentRecordIndex({
                     </CardContent>
                 </Card>
             </div>
+
+            <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete selected payment records?</DialogTitle>
+                        <DialogDescription>
+                            This will delete {selectedRecords.size} selected record{selectedRecords.size === 1 ? '' : 's'}.
+                            Successful payments will be skipped and left untouched.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={confirmBulkDelete} disabled={deleting}>
+                            {deleting ? (
+                                <>
+                                    <Trash2 className="animate-pulse" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 />
+                                    Delete now
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

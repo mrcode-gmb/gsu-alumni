@@ -30,14 +30,14 @@ class StudentReceiptController extends Controller
 
     public function lookup(LookupReceiptRequest $request): RedirectResponse
     {
-        $receipt = $this->receiptService->findByReceiptNumberAndMatric(
-            $request->string('receipt_number')->toString(),
+        $receipt = $this->receiptService->findLatestByEmailAndMatric(
+            $request->string('email')->toString(),
             $request->string('matric_number')->toString(),
         );
 
         if (! $receipt) {
             throw ValidationException::withMessages([
-                'receipt_number' => 'No matching successful receipt was found for the supplied details.',
+                'email' => 'No matching successful receipt was found for the supplied details.',
             ]);
         }
 

@@ -12,6 +12,7 @@ use App\Services\AdminPaymentRecordService;
 use App\Services\ReceiptService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,7 +37,7 @@ class PaymentRecordController extends Controller
         );
 
         return Inertia::render('admin/payment-records/index', [
-            'summary' => $this->adminPaymentRecordService->dashboardSummary(),
+            'summary' => $this->adminPaymentRecordService->summaryForFilters($filters),
             'paymentRecords' => $this->paginationPayload($paymentRecords),
             'filters' => $filters,
             'filterOptions' => $this->adminPaymentRecordService->filterOptions(),
@@ -59,7 +60,7 @@ class PaymentRecordController extends Controller
         $result = $this->adminPaymentRecordService->printableRecords($filters);
 
         return Inertia::render('admin/payment-records/print-index', [
-            'summary' => $this->adminPaymentRecordService->dashboardSummary(),
+            'summary' => $this->adminPaymentRecordService->summaryForFilters($filters),
             'paymentRecords' => $result['records']
                 ->map(fn (PaymentRequest $paymentRequest): array => $this->paymentRecordListPayload($paymentRequest))
                 ->values(),
@@ -119,6 +120,43 @@ class PaymentRecordController extends Controller
         }
 
         return redirect()->to($this->receiptService->signedShowUrl($receipt));
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        $references = collect($request->input('records', []))
+            ->map(fn (string $reference) => trim($reference))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($references)) {
+            return back()->with('error', 'Please select at least one payment record to delete.');
+        }
+
+        $records = PaymentRequest::query()
+            ->whereIn('public_reference', $references)
+            ->get();
+
+        $deletable = $records->filter(fn (PaymentRequest $record) => ! $record->payment_status->isSuccessful());
+        $skipped = $records->count() - $deletable->count();
+
+        if ($deletable->isEmpty()) {
+            return back()->with('error', 'Successful payments cannot be deleted.');
+        }
+
+        PaymentRequest::query()
+            ->whereIn('public_reference', $deletable->pluck('public_reference'))
+            ->delete();
+
+        $message = $deletable->count().' payment record'.($deletable->count() === 1 ? '' : 's').' deleted.';
+
+        if ($skipped > 0) {
+            $message .= ' '.$skipped.' successful payment'.($skipped === 1 ? '' : 's').' were skipped.';
+        }
+
+        return back()->with('success', $message);
     }
 
     /**

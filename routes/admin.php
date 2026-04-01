@@ -52,6 +52,7 @@ Route::middleware(['auth', 'verified', 'admin_role'])
         Route::get('payment-records/print', [PaymentRecordController::class, 'print'])->name('payment-records.print');
         Route::get('payment-records/download-pdf', [PaymentRecordController::class, 'downloadPdf'])->name('payment-records.download-pdf');
         Route::get('payment-records', [PaymentRecordController::class, 'index'])->name('payment-records.index');
+        Route::post('payment-records/bulk-delete', [PaymentRecordController::class, 'bulkDelete'])->name('payment-records.bulk-delete');
         Route::get('payment-records/{paymentRequest}', [PaymentRecordController::class, 'show'])->name('payment-records.show');
         Route::get('payment-records/{paymentRequest}/print', [PaymentRecordController::class, 'printSingle'])->name('payment-records.print-single');
         Route::post('payment-records/{paymentRequest}/receipt', [PaymentRecordController::class, 'receipt'])->name('payment-records.receipt');
