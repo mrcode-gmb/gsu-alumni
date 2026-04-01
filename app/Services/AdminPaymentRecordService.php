@@ -132,6 +132,46 @@ class AdminPaymentRecordService
      * @param  array<string, string>  $filters
      * @return array<string, int|string>
      */
+    public function cashierSummaryForFilters(array $filters): array
+    {
+        $summary = $this->cashierFilteredBaseQuery($filters)
+            ->selectRaw('COUNT(*) as total_payment_requests')
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_successful_payments',
+                [PaymentRequestStatus::Successful->value],
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_pending_payments',
+                [PaymentRequestStatus::Pending->value],
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_failed_payments',
+                [PaymentRequestStatus::Failed->value],
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as total_abandoned_payments',
+                [PaymentRequestStatus::Abandoned->value],
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN payment_status = ? THEN base_amount ELSE 0 END), 0) as total_amount_collected',
+                [PaymentRequestStatus::Successful->value],
+            )
+            ->first();
+
+        return [
+            'total_payment_requests' => (int) ($summary?->total_payment_requests ?? 0),
+            'total_successful_payments' => (int) ($summary?->total_successful_payments ?? 0),
+            'total_pending_payments' => (int) ($summary?->total_pending_payments ?? 0),
+            'total_failed_payments' => (int) ($summary?->total_failed_payments ?? 0),
+            'total_abandoned_payments' => (int) ($summary?->total_abandoned_payments ?? 0),
+            'total_amount_collected' => number_format((float) ($summary?->total_amount_collected ?? 0), 2, '.', ''),
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $filters
+     * @return array<string, int|string>
+     */
     public function summaryForFilters(array $filters): array
     {
         $summary = $this->filteredBaseQuery($filters)
@@ -186,6 +226,16 @@ class AdminPaymentRecordService
     public function paginateRecords(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         return $this->filteredQuery($filters)
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /**
+     * @param  array<string, string>  $filters
+     */
+    public function paginateCashierRecords(array $filters, int $perPage = 20): LengthAwarePaginator
+    {
+        return $this->cashierFilteredQuery($filters)
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -315,6 +365,16 @@ class AdminPaymentRecordService
     /**
      * @param  array<string, string>  $filters
      */
+    protected function cashierFilteredQuery(array $filters): Builder
+    {
+        return $this->cashierFilteredBaseQuery($filters)
+            ->with(['receipt:id,payment_request_id,receipt_number'])
+            ->orderByDesc('created_at');
+    }
+
+    /**
+     * @param  array<string, string>  $filters
+     */
     protected function filteredBaseQuery(array $filters): Builder
     {
         $search = trim($filters['search'] ?? '');
@@ -342,6 +402,35 @@ class AdminPaymentRecordService
             ->when(($filters['graduation_session'] ?? '') !== '', fn (Builder $query): Builder => $query->where('graduation_session', $filters['graduation_session']))
             ->when(($filters['date_from'] ?? '') !== '', fn (Builder $query): Builder => $query->whereDate('created_at', '>=', $filters['date_from']))
             ->when(($filters['date_to'] ?? '') !== '', fn (Builder $query): Builder => $query->whereDate('created_at', '<=', $filters['date_to']));
+
+        return $query;
+    }
+
+    /**
+     * @param  array<string, string>  $filters
+     */
+    protected function cashierFilteredBaseQuery(array $filters): Builder
+    {
+        $search = trim($filters['search'] ?? '');
+        $query = PaymentRequest::query();
+
+        if ($search !== '') {
+            $query->where(function (Builder $query) use ($search): void {
+                $query
+                    ->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('matric_number', 'like', "%{$search}%")
+                    ->orWhere('payment_reference', 'like', "%{$search}%")
+                    ->orWhere('paystack_reference', 'like', "%{$search}%")
+                    ->orWhereHas('receipt', function (Builder $receiptQuery) use ($search): void {
+                        $receiptQuery->where('receipt_number', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $query->when(
+            ($filters['status'] ?? '') !== '',
+            fn (Builder $query): Builder => $query->where('payment_status', $filters['status']),
+        );
 
         return $query;
     }

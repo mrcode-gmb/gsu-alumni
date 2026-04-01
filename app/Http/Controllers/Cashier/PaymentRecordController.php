@@ -35,35 +35,20 @@ class PaymentRecordController extends Controller
         $allowedPerPage = ['20', '50', '100', '200', '500', 'all'];
         $perPageInput = in_array($perPageInput, $allowedPerPage, true) ? $perPageInput : '20';
 
-        $query = PaymentRequest::query()
-            ->with(['receipt:id,payment_request_id,receipt_number'])
-            ->orderByDesc('created_at');
-
-        if ($search !== '') {
-            $query->where(function ($builder) use ($search) {
-                $builder
-                    ->where('full_name', 'like', "%{$search}%")
-                    ->orWhere('matric_number', 'like', "%{$search}%")
-                    ->orWhere('payment_reference', 'like', "%{$search}%")
-                    ->orWhere('paystack_reference', 'like', "%{$search}%")
-                    ->orWhereHas('receipt', function ($receiptQuery) use ($search) {
-                        $receiptQuery->where('receipt_number', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        if ($statusFilter !== '') {
-            $query->where('payment_status', $statusFilter);
-        }
+        $filters = [
+            'search' => $search,
+            'status' => $statusFilter,
+            'per_page' => $perPageInput,
+        ];
+        $summary = $this->adminPaymentRecordService->cashierSummaryForFilters($filters);
 
         if ($perPageInput === 'all') {
-            $total = (clone $query)->count();
-            $perPage = max($total, 1);
+            $perPage = max((int) $summary['total_payment_requests'], 1);
         } else {
             $perPage = (int) $perPageInput;
         }
 
-        $paymentRecords = $query->paginate($perPage)->withQueryString();
+        $paymentRecords = $this->adminPaymentRecordService->paginateCashierRecords($filters, $perPage);
         $paymentRecords->setCollection(
             $paymentRecords->getCollection()->map(
                 fn (PaymentRequest $paymentRequest): array => $this->paymentRecordListPayload($paymentRequest),
@@ -71,13 +56,9 @@ class PaymentRecordController extends Controller
         );
 
         return Inertia::render('cashier/payment-records/index', [
-            'summary' => $this->adminPaymentRecordService->cashierDashboardSummary(),
+            'summary' => $summary,
             'paymentRecords' => $this->paginationPayload($paymentRecords),
-            'filters' => [
-                'search' => $search,
-                'status' => $statusFilter,
-                'per_page' => $perPageInput,
-            ],
+            'filters' => $filters,
         ]);
     }
 
