@@ -50,6 +50,8 @@ interface CashierPaymentRecordIndexProps {
     filters: {
         search: string;
         status: string;
+        date_from: string;
+        date_to: string;
         per_page: string;
     };
 }
@@ -69,16 +71,30 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
     const { flash } = usePage().props as { flash: { success?: string; error?: string } };
     const [search, setSearch] = useState(filters.search ?? '');
     const [status, setStatus] = useState(filters.status ?? '');
+    const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
+    const [dateTo, setDateTo] = useState(filters.date_to ?? '');
     const [perPage, setPerPage] = useState(filters.per_page ?? '20');
     const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
+    const currentFilters = (overrides?: Partial<{ search: string; status: string; date_from: string; date_to: string; per_page: string }>) => {
+        const nextSearch = (overrides?.search ?? search).trim();
+        const nextStatus = overrides?.status ?? status;
+        const nextDateFrom = overrides?.date_from ?? dateFrom;
+        const nextDateTo = overrides?.date_to ?? dateTo;
+        const nextPerPage = overrides?.per_page ?? perPage;
+
+        return {
+            search: nextSearch || undefined,
+            status: nextStatus || undefined,
+            date_from: nextDateFrom || undefined,
+            date_to: nextDateTo || undefined,
+            per_page: nextPerPage || undefined,
+        };
+    };
+
     const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        router.get(
-            route('cashier.payment-records.index'),
-            { search: search.trim(), status: status || undefined, per_page: perPage || undefined },
-            { preserveScroll: true, preserveState: true },
-        );
+        router.get(route('cashier.payment-records.index'), currentFilters(), { preserveScroll: true, preserveState: true });
     };
 
     const handleVerify = (publicReference: string) => {
@@ -135,8 +151,8 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                         <div className="text-xs text-slate-500">Showing {currentRange}</div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={handleSearch}>
-                            <div className="grid gap-2 flex-1">
+                        <form className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_200px_180px_180px_160px_auto_auto]" onSubmit={handleSearch}>
+                            <div className="grid gap-2">
                                 <Label htmlFor="cashier-search">Search</Label>
                                 <Input
                                     id="cashier-search"
@@ -153,7 +169,7 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                         setStatus(value);
                                         router.get(
                                             route('cashier.payment-records.index'),
-                                            { search: search.trim(), status: value || undefined, per_page: perPage || undefined },
+                                            currentFilters({ status: value }),
                                             { preserveScroll: true, preserveState: true },
                                         );
                                     }}
@@ -169,6 +185,24 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="cashier-date-from">Date from</Label>
+                                <Input
+                                    id="cashier-date-from"
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={(event) => setDateFrom(event.target.value)}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="cashier-date-to">Date to</Label>
+                                <Input
+                                    id="cashier-date-to"
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={(event) => setDateTo(event.target.value)}
+                                />
+                            </div>
                             <div className="grid gap-2 sm:min-w-[160px]">
                                 <Label htmlFor="cashier-per-page">Per page</Label>
                                 <Select
@@ -177,7 +211,7 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                         setPerPage(value);
                                         router.get(
                                             route('cashier.payment-records.index'),
-                                            { search: search.trim(), status: status || undefined, per_page: value || undefined },
+                                            currentFilters({ per_page: value }),
                                             { preserveScroll: true, preserveState: true },
                                         );
                                     }}
@@ -199,7 +233,7 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                 <Search />
                                 Search
                             </Button>
-                            {(search || status || perPage !== '20') && (
+                            {(search || status || dateFrom || dateTo || perPage !== '20') && (
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -207,6 +241,8 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
                                     onClick={() => {
                                         setSearch('');
                                         setStatus('');
+                                        setDateFrom('');
+                                        setDateTo('');
                                         setPerPage('20');
                                         router.get(route('cashier.payment-records.index'));
                                     }}

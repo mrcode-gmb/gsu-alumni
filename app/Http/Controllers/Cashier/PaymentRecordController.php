@@ -29,6 +29,8 @@ class PaymentRecordController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $statusFilter = trim((string) $request->query('status', ''));
+        $dateFrom = $this->normalizeDateFilter($request->query('date_from'));
+        $dateTo = $this->normalizeDateFilter($request->query('date_to'));
         $allowedStatuses = collect(PaymentRequestStatus::cases())->map(fn (PaymentRequestStatus $status): string => $status->value)->all();
         $statusFilter = in_array($statusFilter, $allowedStatuses, true) ? $statusFilter : '';
         $perPageInput = (string) $request->query('per_page', '20');
@@ -38,6 +40,8 @@ class PaymentRecordController extends Controller
         $filters = [
             'search' => $search,
             'status' => $statusFilter,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
             'per_page' => $perPageInput,
         ];
         $summary = $this->adminPaymentRecordService->cashierSummaryForFilters($filters);
@@ -164,5 +168,16 @@ class PaymentRecordController extends Controller
                 'total' => $payload['total'],
             ],
         ];
+    }
+
+    protected function normalizeDateFilter(mixed $value): string
+    {
+        if (! is_string($value)) {
+            return '';
+        }
+
+        $value = trim($value);
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1 ? $value : '';
     }
 }

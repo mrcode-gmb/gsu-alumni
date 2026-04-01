@@ -432,6 +432,10 @@ class AdminPaymentRecordService
             fn (Builder $query): Builder => $query->where('payment_status', $filters['status']),
         );
 
+        $query
+            ->when(($filters['date_from'] ?? '') !== '', fn (Builder $query): Builder => $query->whereDate('created_at', '>=', $filters['date_from']))
+            ->when(($filters['date_to'] ?? '') !== '', fn (Builder $query): Builder => $query->whereDate('created_at', '<=', $filters['date_to']));
+
         return $query;
     }
 
