@@ -93,4 +93,12 @@ class PaymentRequest extends Model
     {
         return $this->payment_status->canInitialize();
     }
+
+    public function hasPaystackInitialization(): bool
+    {
+        return $this->initialization_payload !== null
+            || filled($this->payment_reference)
+            || filled($this->paystack_reference)
+            || filled($this->transaction_reference);
+    }
 }

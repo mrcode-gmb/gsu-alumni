@@ -61,7 +61,7 @@ class PaymentRequestService
                 ->get();
 
             $initializedPendingRequest = $paymentRequests->first(
-                fn (PaymentRequest $paymentRequest): bool => $this->hasInitialization($paymentRequest),
+                fn (PaymentRequest $paymentRequest): bool => $paymentRequest->hasPaystackInitialization(),
             );
 
             if ($initializedPendingRequest) {
@@ -152,13 +152,5 @@ class PaymentRequestService
     protected function normalizeText(mixed $value): string
     {
         return preg_replace('/\s+/', ' ', trim((string) $value)) ?? '';
-    }
-
-    protected function hasInitialization(PaymentRequest $paymentRequest): bool
-    {
-        return $paymentRequest->initialization_payload !== null
-            || filled($paymentRequest->payment_reference)
-            || filled($paymentRequest->paystack_reference)
-            || filled($paymentRequest->transaction_reference);
     }
 }

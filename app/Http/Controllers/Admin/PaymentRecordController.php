@@ -141,9 +141,11 @@ class PaymentRecordController extends Controller
 
         $skippedSuccessful = $records->filter(fn (PaymentRequest $record) => $record->payment_status->isSuccessful())->count();
         $skippedInitialized = $records->filter(
-            fn (PaymentRequest $record) => ! $record->payment_status->isSuccessful() && $this->hasPaystackInitialization($record),
+            fn (PaymentRequest $record) => ! $record->payment_status->isSuccessful() && $record->hasPaystackInitialization(),
         )->count();
-        $deletable = $records->filter(fn (PaymentRequest $record) => ! $record->payment_status->isSuccessful() && ! $this->hasPaystackInitialization($record));
+        $deletable = $records->filter(
+            fn (PaymentRequest $record) => ! $record->payment_status->isSuccessful() && ! $record->hasPaystackInitialization(),
+        );
 
         if ($deletable->isEmpty()) {
             return back()->with('error', 'Verified or Paystack-initialized payment records cannot be deleted.');
@@ -164,14 +166,6 @@ class PaymentRecordController extends Controller
         }
 
         return back()->with('success', $message);
-    }
-
-    protected function hasPaystackInitialization(PaymentRequest $paymentRequest): bool
-    {
-        return $paymentRequest->initialization_payload !== null
-            || filled($paymentRequest->payment_reference)
-            || filled($paymentRequest->paystack_reference)
-            || filled($paymentRequest->transaction_reference);
     }
 
     /**

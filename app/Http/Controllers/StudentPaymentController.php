@@ -109,9 +109,7 @@ class StudentPaymentController extends Controller
 
             if (
                 $persistedPaymentRequest instanceof PaymentRequest
-                && $persistedPaymentRequest->initialization_payload === null
-                && blank($persistedPaymentRequest->payment_reference)
-                && blank($persistedPaymentRequest->paystack_reference)
+                && ! $persistedPaymentRequest->hasPaystackInitialization()
             ) {
                 $persistedPaymentRequest->delete();
 
