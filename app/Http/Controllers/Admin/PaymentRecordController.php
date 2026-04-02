@@ -139,11 +139,14 @@ class PaymentRecordController extends Controller
             ->whereIn('public_reference', $references)
             ->get();
 
-        $deletable = $records->filter(fn (PaymentRequest $record) => ! $record->payment_status->isSuccessful());
-        $skipped = $records->count() - $deletable->count();
+        $skippedSuccessful = $records->filter(fn (PaymentRequest $record) => $record->payment_status->isSuccessful())->count();
+        $skippedInitialized = $records->filter(
+            fn (PaymentRequest $record) => ! $record->payment_status->isSuccessful() && $this->hasPaystackInitialization($record),
+        )->count();
+        $deletable = $records->filter(fn (PaymentRequest $record) => ! $record->payment_status->isSuccessful() && ! $this->hasPaystackInitialization($record));
 
         if ($deletable->isEmpty()) {
-            return back()->with('error', 'Successful payments cannot be deleted.');
+            return back()->with('error', 'Verified or Paystack-initialized payment records cannot be deleted.');
         }
 
         PaymentRequest::query()
@@ -152,11 +155,23 @@ class PaymentRecordController extends Controller
 
         $message = $deletable->count().' payment record'.($deletable->count() === 1 ? '' : 's').' deleted.';
 
-        if ($skipped > 0) {
-            $message .= ' '.$skipped.' successful payment'.($skipped === 1 ? '' : 's').' were skipped.';
+        if ($skippedSuccessful > 0) {
+            $message .= ' '.$skippedSuccessful.' successful payment'.($skippedSuccessful === 1 ? '' : 's').' were skipped.';
+        }
+
+        if ($skippedInitialized > 0) {
+            $message .= ' '.$skippedInitialized.' Paystack-initialized record'.($skippedInitialized === 1 ? '' : 's').' were skipped.';
         }
 
         return back()->with('success', $message);
+    }
+
+    protected function hasPaystackInitialization(PaymentRequest $paymentRequest): bool
+    {
+        return $paymentRequest->initialization_payload !== null
+            || filled($paymentRequest->payment_reference)
+            || filled($paymentRequest->paystack_reference)
+            || filled($paymentRequest->transaction_reference);
     }
 
     /**

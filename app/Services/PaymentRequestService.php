@@ -19,7 +19,7 @@ class PaymentRequestService
 
     /**
      * @param  array<string, mixed>  $attributes
-     * @return array{paymentRequest: PaymentRequest, reused: bool}
+     * @return array{paymentRequest: PaymentRequest, reused: bool, reused_initialized: bool}
      */
     public function createOrReusePending(array $attributes): array
     {
@@ -52,21 +52,37 @@ class PaymentRequestService
             $normalizedAttributes = $this->normalize($attributes);
             $payload = $this->buildPayload($normalizedAttributes, $programType, $paymentType);
 
-            $paymentRequest = PaymentRequest::query()
+            $paymentRequests = PaymentRequest::query()
                 ->where('matric_number', $payload['matric_number'])
                 ->where('payment_type_id', $paymentType->getKey())
                 ->where('payment_status', PaymentRequestStatus::Pending)
                 ->lockForUpdate()
-                ->first();
+                ->latest('id')
+                ->get();
+
+            $initializedPendingRequest = $paymentRequests->first(
+                fn (PaymentRequest $paymentRequest): bool => $this->hasInitialization($paymentRequest),
+            );
+
+            if ($initializedPendingRequest) {
+                return [
+                    'paymentRequest' => $initializedPendingRequest->refresh(),
+                    'reused' => true,
+                    'reused_initialized' => true,
+                ];
+            }
+
+            $paymentRequest = $paymentRequests->first();
 
             if ($paymentRequest) {
-                // Keep a single open request per student and payment type until the payment is completed.
+                // Reuse only pending requests that have never been initialized with Paystack.
                 $paymentRequest->fill($payload);
                 $paymentRequest->save();
 
                 return [
                     'paymentRequest' => $paymentRequest->refresh(),
                     'reused' => true,
+                    'reused_initialized' => false,
                 ];
             }
 
@@ -78,6 +94,7 @@ class PaymentRequestService
             return [
                 'paymentRequest' => $paymentRequest,
                 'reused' => false,
+                'reused_initialized' => false,
             ];
         });
     }
@@ -135,5 +152,13 @@ class PaymentRequestService
     protected function normalizeText(mixed $value): string
     {
         return preg_replace('/\s+/', ' ', trim((string) $value)) ?? '';
+    }
+
+    protected function hasInitialization(PaymentRequest $paymentRequest): bool
+    {
+        return $paymentRequest->initialization_payload !== null
+            || filled($paymentRequest->payment_reference)
+            || filled($paymentRequest->paystack_reference)
+            || filled($paymentRequest->transaction_reference);
     }
 }

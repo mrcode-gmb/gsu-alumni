@@ -73,12 +73,26 @@ class PaystackService
                 ->send($method, $endpoint, $payload === [] ? [] : ['json' => $payload])
                 ->throw();
         } catch (ConnectionException|RequestException $exception) {
+            $paystackMessage = null;
+
+            if ($exception instanceof RequestException && $exception->response !== null) {
+                /** @var array<string, mixed>|null $errorPayload */
+                $errorPayload = $exception->response->json();
+                $message = $errorPayload['message'] ?? null;
+                $paystackMessage = is_string($message) ? trim($message) : null;
+            }
+
             Log::error('Paystack request failed.', [
                 'endpoint' => $endpoint,
                 'message' => $exception->getMessage(),
+                'paystack_message' => $paystackMessage,
             ]);
 
-            throw new RuntimeException('We could not communicate with Paystack right now. Please try again shortly.');
+            throw new RuntimeException(
+                $paystackMessage !== null && $paystackMessage !== ''
+                    ? $paystackMessage
+                    : 'We could not communicate with Paystack right now. Please try again shortly.',
+            );
         }
 
         /** @var array<string, mixed> $responsePayload */

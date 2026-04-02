@@ -25,14 +25,12 @@ class PaymentCheckoutService
     public function initializePayment(PaymentRequest $paymentRequest): array
     {
         $paymentRequest = $this->preparePaymentRequestForCheckout($paymentRequest);
+        $existingAuthorizationUrl = data_get($paymentRequest->initialization_payload, 'data.authorization_url');
 
-        if (
-            is_array($paymentRequest->initialization_payload)
-            && filled($paymentRequest->initialization_payload['authorization_url'] ?? null)
-        ) {
+        if (is_string($existingAuthorizationUrl) && $existingAuthorizationUrl !== '') {
             return [
                 'paymentRequest' => $paymentRequest,
-                'authorizationUrl' => (string) $paymentRequest->initialization_payload['authorization_url'],
+                'authorizationUrl' => $existingAuthorizationUrl,
             ];
         }
 
@@ -110,7 +108,7 @@ class PaymentCheckoutService
      */
     public function preparePopupPayment(PaymentRequest $paymentRequest): array
     {
-        $paymentRequest = $this->preparePaymentRequestForCheckout($paymentRequest);
+        $paymentRequest = $this->initializePayment($paymentRequest)['paymentRequest'];
         $publicKey = (string) config('services.paystack.public_key');
 
         if ($publicKey === '') {

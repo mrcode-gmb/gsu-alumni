@@ -609,7 +609,7 @@ export default function PaymentRecordIndex({
                         <DialogTitle>Delete selected payment records?</DialogTitle>
                         <DialogDescription>
                             This will delete {selectedRecords.size} selected record{selectedRecords.size === 1 ? '' : 's'}.
-                            Successful payments will be skipped and left untouched.
+                            Successful or Paystack-initialized payments will be skipped and left untouched.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>

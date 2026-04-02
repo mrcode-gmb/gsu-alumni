@@ -15,6 +15,7 @@ use App\Services\PaymentCheckoutService;
 use App\Support\GraduationSessionOptions;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -99,12 +100,25 @@ class StudentPaymentController extends Controller
         $result = $this->paymentRequestService->createOrReusePending($request->validated());
         $paymentRequest = $result['paymentRequest'];
         $reused = $result['reused'];
+        $reusedInitialized = $result['reused_initialized'];
 
         try {
-            $this->paymentCheckoutService->initializePayment($paymentRequest);
+            $paymentRequest = $this->paymentCheckoutService->initializePayment($paymentRequest)['paymentRequest'];
         } catch (Throwable $exception) {
-            if ($paymentRequest->initialization_payload === null) {
-                $paymentRequest->delete();
+            $persistedPaymentRequest = PaymentRequest::query()->find($paymentRequest->getKey());
+
+            if (
+                $persistedPaymentRequest instanceof PaymentRequest
+                && $persistedPaymentRequest->initialization_payload === null
+                && blank($persistedPaymentRequest->payment_reference)
+                && blank($persistedPaymentRequest->paystack_reference)
+            ) {
+                $persistedPaymentRequest->delete();
+
+                Log::warning('Uninitialized payment request deleted after Paystack initialization failure.', [
+                    'payment_request_id' => $paymentRequest->getKey(),
+                    'message' => $exception->getMessage(),
+                ]);
             }
 
             return back()->with('error', 'We could not initialize Paystack for this payment. Please try again.');
@@ -114,9 +128,11 @@ class StudentPaymentController extends Controller
 
         return to_route('student-payments.show', $paymentRequest)
             ->with([
-                'success' => $reused
-                    ? 'An existing pending request was found and updated for you.'
-                    : 'Your payment request has been created and is ready for payment initialization.',
+                'success' => $reusedInitialized
+                    ? 'An existing Paystack-initialized request was found and reopened for payment.'
+                    : ($reused
+                        ? 'An existing pending request was found and updated for you.'
+                        : 'Your payment request has been created and is ready for payment initialization.'),
                 'auto_open_checkout' => true,
             ]);
     }
