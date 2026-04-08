@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { type AdminPaymentDashboardSummary, type BreadcrumbItem, type PaginationLink, type PaymentRequestStatus } from '@/types';
+import { type AdminPaymentDashboardSummary, type BreadcrumbItem, type PaginationLink, type PaymentRequestStatus, type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowRight, Loader2, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -68,7 +68,7 @@ const currencyFormatter = new Intl.NumberFormat('en-NG', {
 });
 
 export default function CashierPaymentRecordsIndex({ summary, paymentRecords, filters }: CashierPaymentRecordIndexProps) {
-    const { flash } = usePage().props as { flash: { success?: string; error?: string } };
+    const { flash } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filters.search ?? '');
     const [status, setStatus] = useState(filters.status ?? '');
     const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
@@ -123,7 +123,7 @@ export default function CashierPaymentRecordsIndex({ summary, paymentRecords, fi
             <div className="space-y-6 p-4">
                 <Heading
                     title="Payment records"
-                    description="Review all member payments and confirm verified receipts when needed."
+                    description="Review member payment records and confirm verified receipts when needed."
                 />
 
                 {flash?.success && (

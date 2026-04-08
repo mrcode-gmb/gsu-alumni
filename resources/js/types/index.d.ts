@@ -220,6 +220,11 @@ export interface AdminPaymentDashboardSummary {
     total_amount_collected: string;
 }
 
+export interface AdminProgramTypeSuccessfulTransaction {
+    name: string;
+    successful_transactions: number;
+}
+
 export interface AdminRecentPaymentRecord {
     public_reference: string;
     full_name: string;

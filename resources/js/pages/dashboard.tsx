@@ -4,7 +4,13 @@ import { PaymentStatusBadge } from '@/components/payment-records/payment-status-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { type AdminPaymentDashboardSummary, type AdminRecentPaymentRecord, type BreadcrumbItem, type SharedData } from '@/types';
+import {
+    type AdminPaymentDashboardSummary,
+    type AdminProgramTypeSuccessfulTransaction,
+    type AdminRecentPaymentRecord,
+    type BreadcrumbItem,
+    type SharedData,
+} from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowRight, CreditCard, FileText, Printer, ShieldCheck } from 'lucide-react';
 
@@ -24,13 +30,18 @@ const currencyFormatter = new Intl.NumberFormat('en-NG', {
 interface DashboardProps {
     adminSummary: AdminPaymentDashboardSummary | null;
     cashierSummary: AdminPaymentDashboardSummary | null;
+    successfulTransactionsByProgramType: AdminProgramTypeSuccessfulTransaction[];
     recentPaymentRecords: AdminRecentPaymentRecord[];
 }
 
-export default function Dashboard({ adminSummary, cashierSummary, recentPaymentRecords }: DashboardProps) {
+export default function Dashboard({ adminSummary, cashierSummary, successfulTransactionsByProgramType, recentPaymentRecords }: DashboardProps) {
     const { auth } = usePage<SharedData>().props;
     const isAdmin = auth.user.role === 'alumni_admin' || auth.user.role === 'super_admin';
     const isCashier = auth.user.role === 'cashier';
+    const maxSuccessfulTransactions = successfulTransactionsByProgramType.reduce(
+        (max, item) => Math.max(max, item.successful_transactions),
+        0,
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -50,6 +61,80 @@ export default function Dashboard({ adminSummary, cashierSummary, recentPaymentR
                 {isAdmin ? (
                     <div className="space-y-6">
                         {adminSummary && <PaymentRecordSummaryCards summary={adminSummary} />}
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Successful transactions by programme</CardTitle>
+                                <CardDescription>
+                                    A full count of verified successful transactions across all programme types, without using payment amounts.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {successfulTransactionsByProgramType.length === 0 ? (
+                                    <div className="text-muted-foreground rounded-lg border border-dashed px-6 py-10 text-center text-sm">
+                                        No successful programme transactions have been recorded yet.
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                                            {successfulTransactionsByProgramType.map((programme) => (
+                                                <Card key={programme.name} className="border-slate-200 bg-slate-50/60">
+                                                    <CardHeader className="gap-1">
+                                                        <CardDescription className="text-xs tracking-[0.18em] uppercase">
+                                                            Programme
+                                                        </CardDescription>
+                                                        <CardTitle className="text-lg leading-tight">
+                                                            {programme.name}
+                                                        </CardTitle>
+                                                        <p className="text-2xl font-semibold text-slate-900">
+                                                            {programme.successful_transactions}
+                                                        </p>
+                                                        <p className="text-xs text-slate-500">
+                                                            successful transaction{programme.successful_transactions === 1 ? '' : 's'}
+                                                        </p>
+                                                    </CardHeader>
+                                                </Card>
+                                            ))}
+                                        </div>
+
+                                        <Card className="border-slate-200 bg-white">
+                                            <CardHeader>
+                                                <CardTitle>Programme performance chart</CardTitle>
+                                                <CardDescription>
+                                                    Quick visual comparison of successful transactions across all programme types.
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="space-y-4">
+                                                    {successfulTransactionsByProgramType.map((programme) => {
+                                                        const width = maxSuccessfulTransactions > 0
+                                                            ? Math.max((programme.successful_transactions / maxSuccessfulTransactions) * 100, 8)
+                                                            : 0;
+
+                                                        return (
+                                                            <div key={programme.name} className="space-y-2">
+                                                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                                    <p className="text-sm font-medium text-slate-800">{programme.name}</p>
+                                                                    <p className="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">
+                                                                        {programme.successful_transactions} success{programme.successful_transactions === 1 ? '' : 'es'}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                                                                    <div
+                                                                        className="h-full rounded-full bg-emerald-600 transition-all"
+                                                                        style={{ width: `${width}%` }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </>
+                                )}
+                            </CardContent>
+                        </Card>
 
                         <div className="grid gap-4 lg:grid-cols-[1.35fr,1fr]">
                             <Card>
@@ -209,25 +294,96 @@ export default function Dashboard({ adminSummary, cashierSummary, recentPaymentR
                     </div>
                 ) : isCashier ? (
                     <div className="space-y-6">
-                        {cashierSummary && <PaymentRecordSummaryCards summary={cashierSummary} variant="cashier" />}
+                        <div className="grid gap-4 lg:grid-cols-[320px,1fr]">
+                            <Card className="border-emerald-200 bg-emerald-50/70">
+                                <CardHeader>
+                                    <CardDescription className="text-xs tracking-[0.18em] uppercase">Total successful transactions</CardDescription>
+                                    <CardTitle className="text-4xl leading-none text-emerald-900">
+                                        {cashierSummary?.total_successful_payments ?? 0}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <p className="text-sm leading-6 text-emerald-900/80">
+                                        This shows every successful verified transaction across all programme types, without using payment amounts.
+                                    </p>
+                                    <Button className="w-full sm:w-auto" asChild>
+                                        <Link href={route('cashier.receipts.verify')}>
+                                            Verify payment
+                                            <ArrowRight />
+                                        </Link>
+                                    </Button>
+                                </CardContent>
+                            </Card>
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Receipt verification desk</CardTitle>
-                                <CardDescription>Confirm member payments before certificate collection.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <p className="text-muted-foreground text-sm">
-                                    Start a quick lookup by matric number and confirm the verified receipt details.
-                                </p>
-                                <Button className="w-full sm:w-auto" asChild>
-                                    <Link href={route('cashier.receipts.verify')}>
-                                        Verify receipts
-                                        <ArrowRight />
-                                    </Link>
-                                </Button>
-                            </CardContent>
-                        </Card>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Successful transactions by programme</CardTitle>
+                                    <CardDescription>
+                                        Count of successful transactions for Undergraduate, Diploma, and all other available programme types.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {successfulTransactionsByProgramType.length === 0 ? (
+                                        <div className="text-muted-foreground rounded-lg border border-dashed px-6 py-10 text-center text-sm">
+                                            No successful programme transactions have been recorded yet.
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-5">
+                                            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                                                {successfulTransactionsByProgramType.map((programme) => (
+                                                    <Card key={programme.name} className="border-slate-200 bg-slate-50/60">
+                                                        <CardHeader className="gap-1">
+                                                            <CardDescription className="text-xs tracking-[0.18em] uppercase">
+                                                                Programme
+                                                            </CardDescription>
+                                                            <CardTitle className="text-lg leading-tight">{programme.name}</CardTitle>
+                                                            <p className="text-2xl font-semibold text-slate-900">
+                                                                {programme.successful_transactions}
+                                                            </p>
+                                                        </CardHeader>
+                                                    </Card>
+                                                ))}
+                                            </div>
+
+                                            <Card className="border-slate-200 bg-white">
+                                                <CardHeader>
+                                                    <CardTitle>Programme bar chart</CardTitle>
+                                                    <CardDescription>
+                                                        A visual breakdown of successful transaction counts across all programme types.
+                                                    </CardDescription>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <div className="space-y-4">
+                                                        {successfulTransactionsByProgramType.map((programme) => {
+                                                            const width = maxSuccessfulTransactions > 0
+                                                                ? Math.max((programme.successful_transactions / maxSuccessfulTransactions) * 100, 8)
+                                                                : 0;
+
+                                                            return (
+                                                                <div key={programme.name} className="space-y-2">
+                                                                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                                        <p className="text-sm font-medium text-slate-800">{programme.name}</p>
+                                                                        <p className="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">
+                                                                            {programme.successful_transactions} success{programme.successful_transactions === 1 ? '' : 'es'}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                                                                        <div
+                                                                            className="h-full rounded-full bg-emerald-600 transition-all"
+                                                                            style={{ width: `${width}%` }}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 ) : (
                     <Card>

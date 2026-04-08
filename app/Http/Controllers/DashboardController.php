@@ -23,6 +23,7 @@ class DashboardController extends Controller
                 return Inertia::render('dashboard', [
                     'adminSummary' => null,
                     'cashierSummary' => $this->adminPaymentRecordService->cashierDashboardSummary(),
+                    'successfulTransactionsByProgramType' => $this->adminPaymentRecordService->successfulTransactionsByProgramType(),
                     'recentPaymentRecords' => [],
                 ]);
             }
@@ -30,6 +31,7 @@ class DashboardController extends Controller
             return Inertia::render('dashboard', [
                 'adminSummary' => null,
                 'cashierSummary' => null,
+                'successfulTransactionsByProgramType' => [],
                 'recentPaymentRecords' => [],
             ]);
         }
@@ -37,6 +39,7 @@ class DashboardController extends Controller
         return Inertia::render('dashboard', [
             'adminSummary' => $this->adminPaymentRecordService->dashboardSummary(),
             'cashierSummary' => null,
+            'successfulTransactionsByProgramType' => $this->adminPaymentRecordService->successfulTransactionsByProgramType(),
             'recentPaymentRecords' => $this->adminPaymentRecordService
                 ->recentRecords()
                 ->map(fn (PaymentRequest $paymentRequest): array => $this->dashboardRecordPayload($paymentRequest))

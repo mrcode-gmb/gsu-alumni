@@ -33,7 +33,7 @@ interface ReceiptVerifyProps {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Receipt Verification', href: '/cashier/receipts/verify' },
+    { title: 'Verify Payment', href: '/cashier/receipts/verify' },
 ];
 
 const currencyFormatter = new Intl.NumberFormat('en-NG', {
@@ -68,18 +68,18 @@ export default function CashierReceiptVerify({ verification }: ReceiptVerifyProp
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Receipt Verification" />
+            <Head title="Verify Payment" />
 
             <div className="space-y-6 p-4">
                 <Heading
-                    title="Receipt verification"
+                    title="Verify payment"
                     description="Cashiers can confirm member payments by matric number."
                 />
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Verify member receipts</CardTitle>
-                        <CardDescription>Enter the matric number to list verified receipts for this member.</CardDescription>
+                        <CardTitle>Find member payment</CardTitle>
+                        <CardDescription>Enter the matric number to check this member's payment records.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form className="space-y-5" onSubmit={submit}>
@@ -97,7 +97,7 @@ export default function CashierReceiptVerify({ verification }: ReceiptVerifyProp
 
                             <Button type="submit" disabled={processing}>
                                 <Search />
-                                {processing ? 'Checking...' : 'Verify receipt'}
+                                {processing ? 'Checking...' : 'Verify payment'}
                             </Button>
                         </form>
                     </CardContent>

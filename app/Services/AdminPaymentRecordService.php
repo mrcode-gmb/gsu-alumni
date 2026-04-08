@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\PaymentRequest;
 use App\Models\PaymentType;
+use App\Models\ProgramType;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -218,6 +219,41 @@ class AdminPaymentRecordService
             ->orderByDesc('created_at')
             ->limit($limit)
             ->get();
+    }
+
+    /**
+     * @return array<int, array{name: string, successful_transactions: int}>
+     */
+    public function successfulTransactionsByProgramType(): array
+    {
+        $successfulCounts = PaymentRequest::query()
+            ->where('payment_status', PaymentRequestStatus::Successful)
+            ->selectRaw('program_type_name, COUNT(*) as total')
+            ->groupBy('program_type_name')
+            ->pluck('total', 'program_type_name');
+
+        $officialProgramTypes = ProgramType::query()
+            ->ordered()
+            ->get(['name'])
+            ->map(fn (ProgramType $programType): array => [
+                'name' => $programType->name,
+                'successful_transactions' => (int) ($successfulCounts[$programType->name] ?? 0),
+            ]);
+
+        $officialProgramTypeNames = $officialProgramTypes->pluck('name');
+
+        $legacyProgramTypes = $successfulCounts
+            ->filter(fn (mixed $count, mixed $name): bool => filled($name) && ! $officialProgramTypeNames->contains((string) $name))
+            ->map(fn (mixed $count, mixed $name): array => [
+                'name' => (string) $name,
+                'successful_transactions' => (int) $count,
+            ])
+            ->values();
+
+        return $officialProgramTypes
+            ->concat($legacyProgramTypes)
+            ->values()
+            ->all();
     }
 
     /**
