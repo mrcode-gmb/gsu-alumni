@@ -15,7 +15,7 @@ import { useState } from 'react';
 
 type ReceiptVerification = {
     public_reference: string;
-    receipt_number: string;
+    receipt_number: string | null;
     member_name: string;
     matric_number: string;
     payment_type: string;
@@ -32,7 +32,6 @@ interface ReceiptVerifyProps {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
     { title: 'Verify Payment', href: '/cashier/receipts/verify' },
 ];
 
@@ -73,13 +72,13 @@ export default function CashierReceiptVerify({ verification }: ReceiptVerifyProp
             <div className="space-y-6 p-4">
                 <Heading
                     title="Verify payment"
-                    description="Cashiers can confirm member payments by matric number."
+                    description="Cashiers can check all member payment records by matric number, including successful, pending, failed, and abandoned payments."
                 />
 
                 <Card>
                     <CardHeader>
                         <CardTitle>Find member payment</CardTitle>
-                        <CardDescription>Enter the matric number to check this member's payment records.</CardDescription>
+                        <CardDescription>Enter the matric number to check every payment record for this member.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form className="space-y-5" onSubmit={submit}>
@@ -103,6 +102,13 @@ export default function CashierReceiptVerify({ verification }: ReceiptVerifyProp
                     </CardContent>
                 </Card>
 
+                <Alert>
+                    <AlertTitle>All payment statuses are included</AlertTitle>
+                    <AlertDescription>
+                        This search returns successful, pending, failed, and abandoned payment records for the entered matric number.
+                    </AlertDescription>
+                </Alert>
+
                 {flash.error && (
                     <Alert variant="destructive">
                         <AlertTitle>Verification failed</AlertTitle>
@@ -117,7 +123,9 @@ export default function CashierReceiptVerify({ verification }: ReceiptVerifyProp
                                 <CheckCircle2 className="size-5" />
                                 Payment requests
                             </CardTitle>
-                            <CardDescription>{verification.length} payment record(s) found for this member.</CardDescription>
+                            <CardDescription>
+                                {verification.length} payment record(s) found for this member across all payment statuses.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {verification.map((receipt, index) => (

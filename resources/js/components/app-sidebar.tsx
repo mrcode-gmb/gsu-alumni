@@ -8,27 +8,24 @@ import AppLogo from './app-logo';
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
+    const dashboardHref = auth.user.role === 'cashier' ? route('cashier.receipts.verify') : route('dashboard');
 
     const mainNavItems: NavItem[] = [
-        {
-            title: 'Dashboard',
-            href: route('dashboard'),
-            icon: LayoutGrid,
-        },
         ...(auth.user.role === 'cashier'
             ? [
-                  {
-                      title: 'Payment Records',
-                      href: route('cashier.payment-records.index'),
-                      icon: FileText,
-                  },
                   {
                       title: 'Verify Payment',
                       href: route('cashier.receipts.verify'),
                       icon: ShieldCheck,
                   },
               ]
-            : []),
+            : [
+                  {
+                      title: 'Dashboard',
+                      href: route('dashboard'),
+                      icon: LayoutGrid,
+                  },
+              ]),
         ...(auth.user.role === 'alumni_admin' || auth.user.role === 'super_admin'
             ? [
                   ...(auth.user.role === 'super_admin'
@@ -75,7 +72,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={route('dashboard')} prefetch>
+                            <Link href={dashboardHref} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

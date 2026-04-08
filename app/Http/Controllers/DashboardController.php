@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PaymentRequest;
 use App\Services\AdminPaymentRecordService;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,18 +15,13 @@ class DashboardController extends Controller
     ) {
     }
 
-    public function index(): Response
+    public function index(): Response|RedirectResponse
     {
         $user = request()->user();
 
         if (! $user?->isAdmin()) {
             if ($user?->isCashier()) {
-                return Inertia::render('dashboard', [
-                    'adminSummary' => null,
-                    'cashierSummary' => $this->adminPaymentRecordService->cashierDashboardSummary(),
-                    'successfulTransactionsByProgramType' => $this->adminPaymentRecordService->successfulTransactionsByProgramType(),
-                    'recentPaymentRecords' => [],
-                ]);
+                return to_route('cashier.receipts.verify');
             }
 
             return Inertia::render('dashboard', [
