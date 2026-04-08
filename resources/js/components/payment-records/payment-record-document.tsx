@@ -34,8 +34,6 @@ export function PaymentRecordDocument({
     paymentRecord: AdminPaymentRecordDetail;
     note?: string;
 }) {
-    const transactionCharges = Number(paymentRecord.portal_charge_amount) + Number(paymentRecord.paystack_charge_amount);
-
     return (
         <article className="admin-print-document overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
             <div className="border-b border-slate-200 bg-[linear-gradient(135deg,_#eff6ff_0%,_#ffffff_42%,_#f8fafc_100%)] px-6 py-6 sm:px-8">
@@ -59,9 +57,9 @@ export function PaymentRecordDocument({
                     </div>
 
                     <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm shadow-sm">
-                        <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Total amount</p>
+                        <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Payment amount</p>
                         <p className="mt-1 text-2xl font-semibold text-slate-950">
-                            {currencyFormatter.format(Number(paymentRecord.amount))}
+                            {currencyFormatter.format(Number(paymentRecord.base_amount))}
                         </p>
                     </div>
                 </div>
@@ -97,11 +95,7 @@ export function PaymentRecordDocument({
                             <Separator />
                             <DetailRow label="Description" value={paymentRecord.payment_type_description || 'No description recorded.'} />
                             <Separator />
-                            <DetailRow label="Base amount" value={currencyFormatter.format(Number(paymentRecord.base_amount))} />
-                            <Separator />
-                            <DetailRow label="Transaction charges" value={currencyFormatter.format(transactionCharges)} />
-                            <Separator />
-                            <DetailRow label="Total amount" value={currencyFormatter.format(Number(paymentRecord.amount))} />
+                            <DetailRow label="Payment amount" value={currencyFormatter.format(Number(paymentRecord.base_amount))} />
                             <Separator />
                             <DetailRow label="Status" value={paymentRecord.payment_status_label} />
                             <Separator />

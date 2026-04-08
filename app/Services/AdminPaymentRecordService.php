@@ -75,7 +75,7 @@ class AdminPaymentRecordService
                 [PaymentRequestStatus::Abandoned->value],
             )
             ->selectRaw(
-                'COALESCE(SUM(CASE WHEN payment_status = ? THEN amount ELSE 0 END), 0) as total_amount_collected',
+                'COALESCE(SUM(CASE WHEN payment_status = ? THEN base_amount ELSE 0 END), 0) as total_amount_collected',
                 [PaymentRequestStatus::Successful->value],
             )
             ->first();
@@ -194,7 +194,7 @@ class AdminPaymentRecordService
                 [PaymentRequestStatus::Abandoned->value],
             )
             ->selectRaw(
-                'COALESCE(SUM(CASE WHEN payment_status = ? THEN amount ELSE 0 END), 0) as total_amount_collected',
+                'COALESCE(SUM(CASE WHEN payment_status = ? THEN base_amount ELSE 0 END), 0) as total_amount_collected',
                 [PaymentRequestStatus::Successful->value],
             )
             ->first();
@@ -479,8 +479,8 @@ class AdminPaymentRecordService
     {
         return match ($sort) {
             'oldest' => $query->orderBy('created_at'),
-            'amount_asc' => $query->orderBy('amount')->orderByDesc('created_at'),
-            'amount_desc' => $query->orderByDesc('amount')->orderByDesc('created_at'),
+            'amount_asc' => $query->orderBy('base_amount')->orderByDesc('created_at'),
+            'amount_desc' => $query->orderByDesc('base_amount')->orderByDesc('created_at'),
             'name_asc' => $query->orderBy('full_name')->orderByDesc('created_at'),
             'name_desc' => $query->orderByDesc('full_name')->orderByDesc('created_at'),
             default => $query->orderByDesc('created_at'),

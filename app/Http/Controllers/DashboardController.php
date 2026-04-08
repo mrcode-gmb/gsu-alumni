@@ -56,7 +56,7 @@ class DashboardController extends Controller
             'full_name' => $paymentRequest->full_name,
             'matric_number' => $paymentRequest->matric_number,
             'payment_type_name' => $paymentRequest->payment_type_name,
-            'amount' => $paymentRequest->amount,
+            'amount' => $paymentRequest->base_amount,
             'payment_status' => $paymentRequest->payment_status->value,
             'payment_status_label' => $paymentRequest->payment_status->label(),
             'payment_reference' => $paymentRequest->payment_reference,
