@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\PaymentRecords\FilterPaymentRecordRequest;
 use App\Models\PaymentRequest;
 use App\Models\PaymentType;
 use App\Services\AdminPaymentRecordService;
+use App\Services\PaymentCheckoutService;
 use App\Services\ReceiptService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
@@ -16,12 +17,15 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Throwable;
 
 class PaymentRecordController extends Controller
 {
     public function __construct(
         protected AdminPaymentRecordService $adminPaymentRecordService,
+        protected PaymentCheckoutService $paymentCheckoutService,
         protected ReceiptService $receiptService,
     ) {
     }
@@ -122,6 +126,38 @@ class PaymentRecordController extends Controller
         return redirect()->to($this->receiptService->signedShowUrl($receipt));
     }
 
+    public function verify(PaymentRequest $paymentRequest): RedirectResponse
+    {
+        if (! in_array($paymentRequest->payment_status, [PaymentRequestStatus::Pending, PaymentRequestStatus::Abandoned], true)) {
+            return back()->with('error', 'Only pending or abandoned payments can be rechecked at this time.');
+        }
+
+        if ($paymentRequest->paystack_reference === null && $paymentRequest->payment_reference === null) {
+            return back()->with('error', 'This payment request has not been initialized with Paystack yet.');
+        }
+
+        try {
+            $result = $this->paymentCheckoutService->verifyExistingPaymentRequest($paymentRequest);
+        } catch (DomainException|RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        } catch (Throwable $exception) {
+            return back()->with('error', 'We could not recheck this payment right now. Please try again shortly.');
+        }
+
+        $paymentRequest = $result['paymentRequest'];
+        $message = $result['message'];
+
+        if ($paymentRequest->payment_status->isSuccessful()) {
+            try {
+                $this->receiptService->issueForPaymentRequest($paymentRequest);
+            } catch (Throwable $exception) {
+                return back()->with('success', $message.' Receipt generation can be retried later.');
+            }
+        }
+
+        return back()->with('success', $message);
+    }
+
     public function bulkDelete(Request $request): RedirectResponse
     {
         $references = collect($request->input('records', []))
@@ -219,6 +255,9 @@ class PaymentRecordController extends Controller
             'has_receipt' => $receipt !== null,
             'can_issue_receipt' => $paymentRequest->payment_status->isSuccessful() && $receipt === null,
             'can_open_receipt' => $paymentRequest->payment_status->isSuccessful(),
+            'can_recheck' => in_array($paymentRequest->payment_status, [PaymentRequestStatus::Pending, PaymentRequestStatus::Abandoned], true)
+                && $paymentRequest->initialization_payload !== null
+                && ($paymentRequest->paystack_reference !== null || $paymentRequest->payment_reference !== null),
         ];
     }
 
@@ -260,6 +299,9 @@ class PaymentRecordController extends Controller
             'has_receipt' => $receipt !== null,
             'can_issue_receipt' => $paymentRequest->payment_status->isSuccessful() && $receipt === null,
             'can_open_receipt' => $paymentRequest->payment_status->isSuccessful(),
+            'can_recheck' => in_array($paymentRequest->payment_status, [PaymentRequestStatus::Pending, PaymentRequestStatus::Abandoned], true)
+                && $paymentRequest->initialization_payload !== null
+                && ($paymentRequest->paystack_reference !== null || $paymentRequest->payment_reference !== null),
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Cashier;
 
+use App\Enums\PaymentRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentRequest;
 use App\Services\PaymentCheckoutService;
@@ -31,8 +32,8 @@ class PaymentRecordController extends Controller
 
     public function verify(PaymentRequest $paymentRequest)
     {
-        if (! $paymentRequest->payment_status->isPending()) {
-            return back()->with('error', 'Only pending payments can be rechecked at this time.');
+        if (! in_array($paymentRequest->payment_status, [PaymentRequestStatus::Pending, PaymentRequestStatus::Abandoned], true)) {
+            return back()->with('error', 'Only pending or abandoned payments can be rechecked at this time.');
         }
 
         if ($paymentRequest->paystack_reference === null && $paymentRequest->payment_reference === null) {

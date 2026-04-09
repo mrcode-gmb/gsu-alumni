@@ -22,7 +22,7 @@ import {
     type SharedData,
 } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CalendarRange, Download, Eye, FileSpreadsheet, Printer, ReceiptText, RotateCcw, Search, Trash2 } from 'lucide-react';
+import { CalendarRange, Download, Eye, FileSpreadsheet, Loader2, Printer, ReceiptText, RotateCcw, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { type FormEvent, useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -80,6 +80,7 @@ export default function PaymentRecordIndex({
     const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
     const pageReferences = useMemo(
         () => paymentRecords.data.map((record) => record.public_reference),
@@ -168,6 +169,18 @@ export default function PaymentRecordIndex({
     );
 
     const noResults = paymentRecords.data.length === 0;
+
+    const handleRecheck = (publicReference: string) => {
+        setVerifyingId(publicReference);
+        router.post(
+            route('admin.payment-records.verify', publicReference),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setVerifyingId(null),
+            },
+        );
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -487,6 +500,27 @@ export default function PaymentRecordIndex({
                                                     </Button>
                                                 )}
 
+                                                {record.can_recheck && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => handleRecheck(record.public_reference)}
+                                                        disabled={verifyingId === record.public_reference}
+                                                    >
+                                                        {verifyingId === record.public_reference ? (
+                                                            <>
+                                                                <Loader2 className="animate-spin" />
+                                                                Rechecking...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <ShieldCheck />
+                                                                Recheck status
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                )}
+
                                                 <Button size="sm" variant="outline" asChild>
                                                     <a
                                                         href={route('admin.payment-records.print-single', record.public_reference)}
@@ -575,6 +609,27 @@ export default function PaymentRecordIndex({
                                                                         <ReceiptText />
                                                                         {record.has_receipt ? 'Receipt' : 'Issue receipt'}
                                                                     </Link>
+                                                                </Button>
+                                                            )}
+
+                                                            {record.can_recheck && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleRecheck(record.public_reference)}
+                                                                    disabled={verifyingId === record.public_reference}
+                                                                >
+                                                                    {verifyingId === record.public_reference ? (
+                                                                        <>
+                                                                            <Loader2 className="animate-spin" />
+                                                                            Rechecking...
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <ShieldCheck />
+                                                                            Recheck status
+                                                                        </>
+                                                                    )}
                                                                 </Button>
                                                             )}
 

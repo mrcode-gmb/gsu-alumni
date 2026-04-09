@@ -4,8 +4,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type AdminPaymentRecordDetail, type BreadcrumbItem, type SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft, FileSpreadsheet, ReceiptText } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ArrowLeft, FileSpreadsheet, Loader2, ReceiptText, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
 
 interface PaymentRecordShowProps {
     paymentRecord: AdminPaymentRecordDetail;
@@ -13,6 +14,7 @@ interface PaymentRecordShowProps {
 
 export default function PaymentRecordShow({ paymentRecord }: PaymentRecordShowProps) {
     const { flash } = usePage<SharedData>().props;
+    const [rechecking, setRechecking] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -54,6 +56,36 @@ export default function PaymentRecordShow({ paymentRecord }: PaymentRecordShowPr
                                     <ReceiptText />
                                     {paymentRecord.has_receipt ? 'Open receipt' : 'Issue receipt'}
                                 </Link>
+                            </Button>
+                        )}
+
+                        {paymentRecord.can_recheck && (
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setRechecking(true);
+                                    router.post(
+                                        route('admin.payment-records.verify', paymentRecord.public_reference),
+                                        {},
+                                        {
+                                            preserveScroll: true,
+                                            onFinish: () => setRechecking(false),
+                                        },
+                                    );
+                                }}
+                                disabled={rechecking}
+                            >
+                                {rechecking ? (
+                                    <>
+                                        <Loader2 className="animate-spin" />
+                                        Rechecking...
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShieldCheck />
+                                        Recheck status
+                                    </>
+                                )}
                             </Button>
                         )}
 

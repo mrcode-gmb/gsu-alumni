@@ -49,7 +49,7 @@ class CashierReceiptController extends Controller
                 'payment_reference' => $paymentRequest->payment_reference,
                 'status' => $paymentRequest->payment_status->label(),
                 'payment_status' => $paymentRequest->payment_status->value,
-                'can_recheck' => $paymentRequest->payment_status === PaymentRequestStatus::Pending
+                'can_recheck' => in_array($paymentRequest->payment_status, [PaymentRequestStatus::Pending, PaymentRequestStatus::Abandoned], true)
                     && $paymentRequest->initialization_payload !== null
                     && ($paymentRequest->paystack_reference !== null || $paymentRequest->payment_reference !== null),
             ];

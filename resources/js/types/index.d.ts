@@ -278,6 +278,7 @@ export interface AdminPaymentRecordListItem {
     has_receipt: boolean;
     can_issue_receipt: boolean;
     can_open_receipt: boolean;
+    can_recheck: boolean;
 }
 
 export interface AdminPaymentRecordDetail {
@@ -311,6 +312,7 @@ export interface AdminPaymentRecordDetail {
     has_receipt: boolean;
     can_issue_receipt: boolean;
     can_open_receipt: boolean;
+    can_recheck: boolean;
 }
 
 export interface AdminPaymentRecordPagination {
